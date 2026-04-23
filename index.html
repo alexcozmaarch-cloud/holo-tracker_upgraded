@@ -1,0 +1,4630 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Holo Tracker — TCG Intelligence</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230d0c0e'/><polygon points='16,4 28,10 28,22 16,28 4,22 4,10' fill='none' stroke='%237c6bff' stroke-width='2.5'/><polygon points='16,9 23,13 23,19 16,23 9,19 9,13' fill='%232ec4b6' opacity='0.7'/></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800,900&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<style>
+/* =========================================
+   DESIGN TOKENS
+   ========================================= */
+:root {
+  --font-display: 'Cabinet Grotesk', 'Helvetica Neue', sans-serif;
+  --font-body: 'Satoshi', 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.8125rem);
+  --text-sm: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  --text-base: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem);
+  --text-lg: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.75rem);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1.125rem;
+  --radius-full: 9999px;
+
+  --transition: 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 280ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Sidebar width */
+  --sidebar-w: 220px;
+  --sidebar-w-collapsed: 60px;
+
+  /* Signal colors */
+  --signal-hot: #ff5c35;
+  --signal-warm: #ff9f2d;
+  --signal-watch: #5c9eff;
+  --signal-buy: #3ecf8e;
+  --signal-strong: #a78bfa;
+  --signal-dip: #f472b6;
+}
+
+/* DARK PALETTE (default) */
+[data-theme="dark"], :root {
+  --bg: #0d0c0e;
+  --bg-deep: #080709;
+  --surface: #131117;
+  --surface-2: #1a1820;
+  --surface-3: #201d28;
+  --border: #2a2735;
+  --border-2: #36324a;
+  --text: #e8e6f0;
+  --text-muted: #8b88a0;
+  --text-faint: #4e4b60;
+
+  --accent: #7c6bff;
+  --accent-hover: #9882ff;
+  --accent-active: #6455e0;
+  --accent-glow: rgba(124,107,255,0.18);
+
+  --teal: #2ec4b6;
+  --teal-glow: rgba(46,196,182,0.12);
+  --gold: #f5c518;
+  --gold-glow: rgba(245,197,24,0.12);
+
+  --success: #3ecf8e;
+  --success-dim: rgba(62,207,142,0.12);
+  --error: #f87171;
+  --error-dim: rgba(248,113,113,0.12);
+  --warning: #fb923c;
+  --warning-dim: rgba(251,146,60,0.12);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
+  --shadow-glow: 0 0 24px var(--accent-glow);
+}
+
+/* LIGHT PALETTE */
+[data-theme="light"] {
+  --bg: #f5f4f8;
+  --bg-deep: #eeecf4;
+  --surface: #ffffff;
+  --surface-2: #f8f7fb;
+  --surface-3: #f0eef8;
+  --border: #dddae8;
+  --border-2: #c8c4d8;
+  --text: #1a1825;
+  --text-muted: #6b6880;
+  --text-faint: #a8a5b8;
+
+  --accent: #6355e8;
+  --accent-hover: #5244d4;
+  --accent-active: #4335c0;
+  --accent-glow: rgba(99,85,232,0.15);
+
+  --teal: #0fa89c;
+  --gold: #d4a010;
+  --success: #16a34a;
+  --success-dim: rgba(22,163,74,0.1);
+  --error: #dc2626;
+  --error-dim: rgba(220,38,38,0.1);
+  --warning: #ea580c;
+  --warning-dim: rgba(234,88,12,0.1);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.14);
+  --shadow-glow: 0 0 24px var(--accent-glow);
+}
+
+/* =========================================
+   BASE RESET
+   ========================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+button { cursor: pointer; font: inherit; color: inherit; background: none; border: none; }
+input, select, textarea { font: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+img, svg { display: block; max-width: 100%; }
+ul { list-style: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* =========================================
+   APP SHELL
+   ========================================= */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: 1fr;
+  height: 100dvh;
+  transition: grid-template-columns var(--transition-slow);
+}
+.app.sidebar-collapsed {
+  grid-template-columns: var(--sidebar-w-collapsed) 1fr;
+}
+
+/* =========================================
+   SIDEBAR
+   ========================================= */
+.sidebar {
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+  z-index: 20;
+}
+
+.sidebar-logo {
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--border);
+  min-height: 64px;
+}
+.sidebar-logo-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+.sidebar-logo-text {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: opacity var(--transition), width var(--transition);
+}
+.sidebar-logo-text .brand {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--accent), var(--teal));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+}
+.sidebar-logo-text .sub {
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: var(--space-3) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.nav-section-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: var(--space-3) var(--space-2) var(--space-1);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity var(--transition);
+}
+.app.sidebar-collapsed .nav-section-label {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  position: relative;
+  transition: background var(--transition), color var(--transition);
+  white-space: nowrap;
+  overflow: hidden;
+  min-height: 38px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+  user-select: none;
+}
+.nav-item:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.nav-item.active {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+.nav-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.nav-label {
+  transition: opacity var(--transition), transform var(--transition);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-badge {
+  margin-left: auto;
+  padding: 1px 5px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  min-width: 18px;
+  text-align: center;
+  transition: opacity var(--transition);
+  line-height: 1.6;
+  flex-shrink: 0;
+}
+.app.sidebar-collapsed .nav-badge,
+.app.sidebar-collapsed .nav-label,
+.app.sidebar-collapsed .sidebar-logo-text {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-footer {
+  padding: var(--space-3) var(--space-2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.sidebar-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  transition: background var(--transition), color var(--transition);
+}
+.sidebar-collapse-btn:hover { background: var(--surface-2); color: var(--text); }
+
+/* Sheets connection status */
+.sheets-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.sheets-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.sheets-dot.connected { background: var(--success); box-shadow: 0 0 6px var(--success); }
+
+/* =========================================
+   MAIN CONTENT AREA
+   ========================================= */
+.main-area {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* =========================================
+   TOP BAR
+   ========================================= */
+.topbar {
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-6);
+  gap: var(--space-4);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.topbar-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-lg);
+  letter-spacing: -0.02em;
+}
+.topbar-kpis {
+  display: flex;
+  gap: var(--space-6);
+  margin-left: var(--space-4);
+}
+.topbar-kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.topbar-kpi-val {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.topbar-kpi-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+.topbar-spacer { flex: 1; }
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.btn-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: background var(--transition), color var(--transition);
+}
+.btn-icon:hover { background: var(--surface-2); color: var(--text); }
+.btn-icon svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* =========================================
+   PAGE CONTENT
+   ========================================= */
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.page { display: none; }
+.page.active { display: contents; }
+
+/* =========================================
+   FORM CARDS
+   ========================================= */
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+}
+.form-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.form-card-header svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--accent);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.form-card-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-3);
+  align-items: end;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.form-group.span-2 { grid-column: span 2; }
+.form-group.span-3 { grid-column: span 3; }
+label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+input[type=text], input[type=number], input[type=date], select, textarea {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text);
+  width: 100%;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+input::placeholder, textarea::placeholder { color: var(--text-faint); }
+select option { background: var(--surface-2); }
+
+.price-input-group {
+  display: flex;
+  gap: var(--space-1);
+}
+.price-input-group input { flex: 1; }
+.price-input-group select { width: 72px; flex-shrink: 0; }
+
+/* =========================================
+   BUTTONS
+   ========================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition: background var(--transition), color var(--transition), box-shadow var(--transition), transform var(--transition);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  letter-spacing: 0.01em;
+}
+.btn:active { transform: scale(0.97); }
+.btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 12px var(--accent-glow); }
+
+.btn-secondary {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--surface-3); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+.btn-ghost:hover { background: var(--surface-2); color: var(--text); }
+
+.btn-sm {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+}
+.btn-sm svg { width: 13px; height: 13px; }
+
+.btn-danger {
+  background: var(--error-dim);
+  color: var(--error);
+  border: 1px solid rgba(248,113,113,0.2);
+}
+.btn-danger:hover { background: var(--error); color: #fff; }
+
+/* =========================================
+   FILTER BAR
+   ========================================= */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-3) var(--space-4);
+}
+.filter-bar .search-wrap {
+  position: relative;
+  min-width: 160px;
+  max-width: 260px;
+}
+.filter-bar .search-wrap svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  stroke: var(--text-faint);
+  fill: none;
+  stroke-width: 2;
+  pointer-events: none;
+}
+.filter-bar .search-wrap input {
+  padding-left: 32px;
+}
+.filter-pills {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+.pill {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  transition: all var(--transition);
+  user-select: none;
+  letter-spacing: 0.02em;
+}
+.pill:hover { border-color: var(--border-2); color: var(--text); }
+.pill.active { background: var(--surface-3); border-color: var(--accent); color: var(--text); }
+.pill-hot.active { border-color: var(--signal-hot); color: var(--signal-hot); background: rgba(255,92,53,0.08); }
+.pill-warm.active { border-color: var(--signal-warm); color: var(--signal-warm); background: rgba(255,159,45,0.08); }
+.pill-watch.active { border-color: var(--signal-watch); color: var(--signal-watch); background: rgba(92,158,255,0.08); }
+.pill-buy.active { border-color: var(--signal-buy); color: var(--signal-buy); background: rgba(62,207,142,0.08); }
+.pill-strong.active { border-color: var(--signal-strong); color: var(--signal-strong); background: rgba(167,139,250,0.08); }
+.pill-dip.active { border-color: var(--signal-dip); color: var(--signal-dip); background: rgba(244,114,182,0.08); }
+.filter-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  outline: none;
+  min-width: 120px;
+}
+.filter-select:focus { border-color: var(--accent); }
+
+/* =========================================
+   TABLE
+   ========================================= */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+thead th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--transition);
+}
+thead th:hover { color: var(--text-muted); }
+thead th.sorted { color: var(--accent); }
+thead th.sortable::after { content: ' ↕'; opacity: 0.4; font-size: 0.7em; }
+thead th.sorted-asc::after { content: ' ↑'; opacity: 1; }
+thead th.sorted-desc::after { content: ' ↓'; opacity: 1; }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface-2); }
+tbody td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--text);
+  vertical-align: middle;
+}
+tbody td.muted { color: var(--text-muted); font-size: var(--text-xs); }
+tbody td.mono { font-family: var(--font-mono); font-size: var(--text-xs); }
+
+.table-footer {
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* =========================================
+   CARD NAME + NOTES CELL
+   ========================================= */
+.card-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.card-name {
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+.card-notes {
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  line-height: 1.3;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================
+   SIGNAL BADGES
+   ========================================= */
+.signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.signal-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.signal.hot     { color: var(--signal-hot);    background: rgba(255, 92,  53, 0.12); }
+.signal.warm    { color: var(--signal-warm);   background: rgba(255,159,  45, 0.12); }
+.signal.watch   { color: var(--signal-watch);  background: rgba( 92,158, 255, 0.12); }
+.signal.buy     { color: var(--signal-buy);    background: rgba( 62,207, 142, 0.12); }
+.signal.strong  { color: var(--signal-strong); background: rgba(167,139, 250, 0.12); }
+.signal.dip     { color: var(--signal-dip);    background: rgba(244,114, 182, 0.12); }
+.signal.none    { color: var(--text-faint);    background: var(--surface-2); }
+
+/* hot signal pulse animation */
+.signal.hot .signal-dot {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.5); }
+}
+
+/* =========================================
+   MENTION COUNT
+   ========================================= */
+.mention-count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+.mention-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  width: 48px;
+  overflow: hidden;
+}
+.mention-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+.mention-num {
+  color: var(--text);
+  font-weight: 500;
+  min-width: 16px;
+}
+
+/* =========================================
+   PRICE CELL
+   ========================================= */
+.price-cell {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.price-main { color: var(--text); font-weight: 500; }
+.price-trend { font-size: var(--text-xs); margin-top: 1px; }
+.price-trend.up { color: var(--success); }
+.price-trend.down { color: var(--error); }
+.price-trend.flat { color: var(--text-faint); }
+
+/* =========================================
+   SPARKLINE
+   ========================================= */
+.sparkline {
+  display: inline-block;
+}
+.sparkline canvas { display: block; }
+
+/* =========================================
+   ROW ACTIONS
+   ========================================= */
+.row-actions {
+  display: flex;
+  gap: var(--space-1);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+tr:hover .row-actions { opacity: 1; }
+
+/* =========================================
+   EMPTY STATE
+   ========================================= */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+}
+.empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-xl);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.empty-icon svg {
+  width: 26px;
+  height: 26px;
+  stroke: var(--text-faint);
+  fill: none;
+  stroke-width: 1.5;
+}
+.empty-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--text);
+}
+.empty-desc {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+/* =========================================
+   KPI CARDS
+   ========================================= */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.kpi-card:hover { border-color: var(--border-2); box-shadow: var(--shadow-md); }
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent-glow) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.kpi-card:hover::before { opacity: 1; }
+.kpi-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.kpi-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.9rem;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.kpi-delta {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.kpi-delta.up { color: var(--success); }
+.kpi-delta.down { color: var(--error); }
+.kpi-icon {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+}
+.kpi-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--accent);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* =========================================
+   CHART CARDS
+   ========================================= */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: var(--space-4);
+}
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+}
+.chart-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+.chart-card-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-base);
+  letter-spacing: -0.01em;
+}
+
+/* =========================================
+   MODAL
+   ========================================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  animation: fadeIn 0.18s ease;
+}
+.modal-overlay.open { display: flex; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  max-width: 580px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+.modal-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-lg);
+  letter-spacing: -0.02em;
+}
+.modal-close {
+  width: 30px; height: 30px;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
+  transition: background var(--transition);
+}
+.modal-close:hover { background: var(--surface-2); color: var(--text); }
+.modal-close svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* =========================================
+   SHEETS CONNECT PANEL
+   ========================================= */
+.sheets-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+.sheets-panel-header {
+  padding: var(--space-5);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.sheets-panel-steps {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.step-item {
+  display: flex;
+  gap: var(--space-3);
+}
+.step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.step-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.step-title {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.step-desc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.code-snippet {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--teal);
+  overflow-x: auto;
+  max-height: 120px;
+  white-space: pre;
+  line-height: 1.5;
+  position: relative;
+}
+.copy-btn {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  padding: 2px 8px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.copy-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.url-connect-group {
+  display: flex;
+  gap: var(--space-2);
+}
+.url-connect-group input { flex: 1; }
+
+/* =========================================
+   TOAST NOTIFICATIONS
+   ========================================= */
+.toast-container {
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  z-index: 200;
+  pointer-events: none;
+}
+.toast {
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 320px;
+  animation: toastIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: all;
+}
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error { border-left: 3px solid var(--error); }
+.toast.info { border-left: 3px solid var(--accent); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(20px); }
+}
+.toast.hiding { animation: toastOut 0.18s ease forwards; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.8s linear infinite; transform-origin: center; display: block; }
+
+/* =========================================
+   GAME BADGE
+   ========================================= */
+.game-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  background: var(--surface-2);
+}
+.game-badge.pokemon { border-color: rgba(255,203,5,0.4); color: #ffcb05; background: rgba(255,203,5,0.08); }
+.game-badge.onepiece { border-color: rgba(255,60,50,0.4); color: #ff3c32; background: rgba(255,60,50,0.08); }
+.game-badge.lorcana { border-color: rgba(92,143,255,0.4); color: #5c8fff; background: rgba(92,143,255,0.08); }
+.game-badge.mtg { border-color: rgba(180,100,255,0.4); color: #b464ff; background: rgba(180,100,255,0.08); }
+.game-badge.yugioh { border-color: rgba(255,170,0,0.4); color: #ffaa00; background: rgba(255,170,0,0.08); }
+.game-badge.digimon { border-color: rgba(0,180,200,0.4); color: #00b4c8; background: rgba(0,180,200,0.08); }
+.game-badge.other { border-color: var(--border); }
+
+/* =========================================
+   SETS TABLE
+   ========================================= */
+.set-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  transition: border-color var(--transition);
+}
+.set-card:hover { border-color: var(--border-2); }
+.sets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-3);
+}
+
+/* =========================================
+   HEATMAP
+   ========================================= */
+.heatmap-wrap {
+  display: flex;
+  gap: 3px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+.heatmap-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.heatmap-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  transition: transform 0.1s;
+}
+.heatmap-cell:hover { transform: scale(1.3); }
+.heatmap-cell[data-level="1"] { background: rgba(124,107,255,0.2); }
+.heatmap-cell[data-level="2"] { background: rgba(124,107,255,0.4); }
+.heatmap-cell[data-level="3"] { background: rgba(124,107,255,0.65); }
+.heatmap-cell[data-level="4"] { background: rgba(124,107,255,0.9); }
+
+/* =========================================
+   PROGRESS BAR (portfolio)
+   ========================================= */
+.progress-bar {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--teal));
+  border-radius: var(--radius-full);
+  transition: width 0.6s ease;
+}
+
+/* =========================================
+   DIVIDER
+   ========================================= */
+.divider {
+  height: 1px;
+  background: var(--border);
+}
+
+/* =========================================
+   DETAIL PANEL (price history)
+   ========================================= */
+.detail-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+.detail-panel-header {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.detail-panel-body {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* =========================================
+   SCROLLBAR STYLING
+   ========================================= */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-2); }
+
+/* =========================================
+   RESPONSIVE — MOBILE
+   ========================================= */
+@media (max-width: 768px) {
+
+  /* ── App shell: sidebar hidden, full-width main ── */
+  .app {
+    grid-template-columns: 1fr;
+    position: relative;
+  }
+
+  /* ── Sidebar: slides in as drawer overlay ── */
+  .sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0;
+    bottom: 0;
+    width: 260px;
+    transition: left var(--transition-slow);
+    z-index: 200;
+    box-shadow: var(--shadow-lg);
+  }
+  .app.mobile-nav-open .sidebar { left: 0; }
+  /* Dim overlay when sidebar open */
+  #mobileNavOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 199;
+  }
+  .app.mobile-nav-open #mobileNavOverlay { display: block; }
+
+  /* ── Topbar ── */
+  .topbar {
+    padding: 0 12px;
+    height: 52px;
+    box-sizing: border-box;
+  }
+  .topbar-kpis { display: none; }
+  #mobileMenuBtn { display: flex !important; flex-shrink: 0; }
+  .topbar-title { font-size: var(--text-base); }
+  .topbar-actions { gap: 6px; flex-shrink: 0; }
+  .topbar-actions .btn span, .topbar-actions .btn-label { display: none; }
+  .topbar-actions .btn {
+    width: 36px; height: 36px;
+    min-width: 36px;
+    padding: 0;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .topbar-actions .btn svg { margin: 0; }
+
+  /* ── Main area ── */
+  .main-area {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* ── Form card: collapsible ── */
+  .form-card {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    padding: var(--space-3) var(--space-3) 0;
+  }
+  .form-card-header {
+    cursor: pointer;
+    margin-bottom: 0;
+    padding-bottom: var(--space-3);
+    user-select: none;
+  }
+  .form-card-header::after {
+    content: '+';
+    margin-left: auto;
+    font-size: 1.2rem;
+    color: var(--text-faint);
+    font-weight: 300;
+    line-height: 1;
+  }
+  .form-card.expanded .form-card-header::after { content: '\2212'; }
+  .form-grid {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+    padding-bottom: var(--space-3);
+  }
+  .form-card.expanded .form-grid { display: grid; }
+  .form-group.span-2 { grid-column: 1 / -1; }
+
+  /* ── Filter bar ── */
+  .filter-bar {
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .search-wrap { width: 100%; }
+  .filter-pills { order: 3; width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
+  .filter-pills::-webkit-scrollbar { display: none; }
+  .filter-bar > div:last-child { order: 2; margin-left: 0; width: 100%; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
+  #refreshPricesBtn .btn-label, #refreshPricesBtn span:not(svg) { font-size: 11px; }
+  /* Game/sort selects don't overflow */
+  .filter-bar select { max-width: 130px; font-size: 11px; }
+
+  /* ── Table: hide columns, fit to screen on mobile ── */
+  #trackerTable .table-scroll {
+    overflow-x: hidden;
+  }
+  /* Hide: 7D(4), 30D(5), GAP(6), MENTIONS(7), Actions(9) — keep Card, Game, LivePrice, Signal */
+  #trackerTable table th:nth-child(4),
+  #trackerTable table td:nth-child(4),
+  #trackerTable table th:nth-child(5),
+  #trackerTable table td:nth-child(5),
+  #trackerTable table th:nth-child(6),
+  #trackerTable table td:nth-child(6),
+  #trackerTable table th:nth-child(7),
+  #trackerTable table td:nth-child(7),
+  #trackerTable table th:nth-child(9),
+  #trackerTable table td:nth-child(9) {
+    display: none !important;
+  }
+  /* Fit tracker table to mobile screen: 3 cols = Card | Game | Price + Signal */
+  #trackerTable table { width: 100%; table-layout: fixed; min-width: unset; }
+  #trackerTable table th:nth-child(1), #trackerTable table td:nth-child(1) { width: 35%; padding-left: 12px; }
+  #trackerTable table th:nth-child(2), #trackerTable table td:nth-child(2) { width: 22%; }
+  #trackerTable table th:nth-child(3), #trackerTable table td:nth-child(3) { width: 22%; }
+  #trackerTable table th:nth-child(8), #trackerTable table td:nth-child(8) { width: 21%; padding: 4px 12px 4px 2px; overflow: visible; }
+  #trackerTable table th, #trackerTable table td {
+    padding: var(--space-2) 6px;
+    font-size: var(--text-xs);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  #trackerTable table th:first-child { padding-left: 12px; }
+  .card-name { font-size: var(--text-sm); }
+  .card-notes { display: none; }
+  .signal-badge { font-size: 9px; padding: 2px 4px; white-space: nowrap; }
+  /* Compact price cell on mobile */
+  .price-cell { gap: 1px; }
+  .price-main { font-size: var(--text-xs) !important; }
+  /* LIVE indicator smaller */
+  #trackerTable table td:nth-child(3) span[style*='teal'] { font-size: 8px !important; }
+
+  /* ── Drawer: full screen bottom sheet on mobile ── */
+  .drawer {
+    width: 100% !important;
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    height: 92dvh;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    transform: translateY(100%) !important;
+  }
+  .drawer-overlay.open .drawer {
+    transform: translateY(0) !important;
+  }
+  /* Drag handle pill */
+  .drawer::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: var(--border-2);
+    border-radius: 2px;
+    margin: var(--space-2) auto 0;
+    flex-shrink: 0;
+  }
+  .drawer-header {
+    padding: var(--space-3) var(--space-4);
+  }
+  .drawer-body {
+    padding: var(--space-3) var(--space-4);
+  }
+  .price-boxes {
+    grid-template-columns: 1fr 1fr;
+  }
+  .drawer-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* ── Sheets / settings modals ── */
+  .modal-box {
+    width: calc(100vw - var(--space-6));
+    max-height: 88dvh;
+    overflow-y: auto;
+  }
+
+  /* ── Section padding ── */
+  .section-content { padding: var(--space-2); }
+  .page { padding: 0; }
+}
+
+/* =========================================
+   TRANSITION HELPERS
+   ========================================= */
+.fade-in {
+  animation: fadeInRow 0.3s ease forwards;
+}
+@keyframes fadeInRow {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   MISC
+   ========================================= */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-lg);
+  letter-spacing: -0.02em;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tag-accent { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(124,107,255,0.25); }
+
+/* =========================================
+   DRAWER
+   ========================================= */
+.drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200;
+  opacity: 0; pointer-events: none; transition: opacity var(--transition-slow);
+}
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(600px, 100vw);
+  background: var(--surface); border-left: 1px solid var(--border);
+  z-index: 201; transform: translateX(100%);
+  transition: transform var(--transition-slow);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.drawer-overlay.open .drawer { transform: translateX(0); }
+.drawer-header { padding: var(--space-4) var(--space-6); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: var(--space-4); flex-shrink: 0; }
+.drawer-img { width: 56px; height: 78px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border-2); background: var(--surface-2); flex-shrink: 0; }
+.drawer-img-placeholder { width: 56px; height: 78px; border-radius: var(--radius-md); border: 1px solid var(--border-2); background: var(--surface-2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--teal); }
+.drawer-title-area { flex: 1; min-width: 0; }
+.drawer-card-name { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; color: var(--text); margin-bottom: var(--space-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drawer-badges { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.drawer-close { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: var(--space-2); border-radius: var(--radius-md); transition: background var(--transition); flex-shrink: 0; }
+.drawer-close:hover { background: var(--surface-2); color: var(--text); }
+.drawer-body { flex: 1; overflow-y: auto; padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-6); }
+.drawer-section { display: flex; flex-direction: column; gap: var(--space-3); }
+.drawer-section-title { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); }
+.drawer-fields { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.drawer-field-full { grid-column: 1 / -1; }
+
+/* Price stat boxes */
+.price-boxes { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.price-box { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4); }
+.price-box-label { font-size: var(--text-xs); color: var(--text-faint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--space-1); }
+.price-box-value { font-family: var(--font-mono); font-size: var(--text-lg); font-weight: 700; color: var(--text); }
+.price-box-sub { font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px; }
+
+/* Divergence banner */
+.divergence-banner { border-radius: var(--radius-lg); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-1); }
+.divergence-banner.rocket { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); }
+.divergence-banner.dip { background: rgba(62,207,142,0.1); border: 1px solid rgba(62,207,142,0.3); }
+.divergence-banner.aligned { background: rgba(124,107,255,0.08); border: 1px solid var(--border); }
+.divergence-title { font-weight: 700; font-size: var(--text-sm); }
+.divergence-desc { font-size: var(--text-xs); color: var(--text-muted); line-height: 1.5; }
+
+/* Momentum pills row */
+.momentum-row { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+.momentum-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: var(--radius-full); font-size: 11px; font-family: var(--font-mono); font-weight: 600; }
+.momentum-pill.up { background: rgba(62,207,142,0.15); color: var(--success); }
+.momentum-pill.down { background: rgba(248,113,113,0.15); color: var(--error); }
+.momentum-pill.flat { background: var(--surface-2); color: var(--text-muted); }
+
+/* Price history chart container */
+.price-chart-wrap { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4); }
+
+/* Price log list */
+.price-log-list { display: flex; flex-direction: column; gap: 1px; max-height: 200px; overflow-y: auto; }
+.price-log-entry { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--surface-2); }
+.price-log-entry:hover { background: var(--surface-3); }
+.price-log-source { font-size: 10px; padding: 2px 6px; border-radius: var(--radius-full); font-family: var(--font-mono); font-weight: 700; }
+.price-log-source.live { background: rgba(46,196,182,0.15); color: var(--teal); }
+.price-log-source.manual { background: rgba(124,107,255,0.15); color: var(--accent); }
+.price-log-delete { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--text-faint); padding: 2px 4px; border-radius: var(--radius-sm); font-size: 13px; line-height: 1; }
+.price-log-delete:hover { color: var(--error); background: var(--error-dim); }
+
+/* Clickable row */
+.tracker-row-clickable { cursor: pointer; }
+.tracker-row-clickable:hover td { background: var(--surface-2) !important; }
+
+/* Gap badge */
+.gap-badge { display: inline-flex; align-items: center; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-full); }
+.gap-badge.positive { background: rgba(62,207,142,0.15); color: var(--success); }
+.gap-badge.negative { background: rgba(248,113,113,0.15); color: var(--error); }
+.gap-badge.neutral { background: var(--surface-2); color: var(--text-faint); }
+
+
+</style>
+</head>
+<body>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- SHEETS MODAL -->
+<div class="modal-overlay" id="sheetsModal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <div class="modal-title">Connect to Google Sheets</div>
+      <button class="modal-close" onclick="closeModal('sheetsModal')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="sheets-panel-steps">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Open your Google Sheet</div>
+          <div class="step-desc">Open your existing <strong>HOLO TCG Tracker</strong> spreadsheet at <a href="https://sheets.google.com" target="_blank" style="color:var(--accent)">sheets.google.com</a>. Your data is safe — the new script is fully backward-compatible with your existing rows.</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Open Apps Script &amp; paste code</div>
+          <div class="step-desc">In your sheet: <strong>Extensions → Apps Script</strong>. Select all existing code, delete it, paste the updated code below, then Save (Ctrl+S). This replaces the old script with the v2 version.</div>
+          <div class="code-snippet" id="appsScriptCode" style="position:relative">// ── Holo Tracker Apps Script v2 ──────────────────────────────
+// Paste this entire block into Extensions → Apps Script, save, then
+// Deploy → New deployment → Web app → Execute as Me → Anyone → Deploy
+const CARDS_SHEET  = 'Cards';
+const SEALED_SHEET = 'Sealed';
+const COLL_SHEET   = 'Collection';
+
+// Cards columns (16 total):
+// 0:id  1:name  2:set  3:game  4:notes  5:firstSeen  6:lastSeen  7:mentions
+// 8:priceHistory  9:tcgdexId  10:variation  11:livePrice  12:livePriceCurrency
+// 13:livePriceFetchedAt  14:priceAvg7  15:priceAvg30
+
+function doGet(e) {
+  return respond({ status: 'ok', message: 'Holo Tracker v2 running' });
+}
+
+function doPost(e) {
+  try {
+    const p  = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const cs = ss.getSheetByName(CARDS_SHEET)  || ss.insertSheet(CARDS_SHEET);
+    const sl = ss.getSheetByName(SEALED_SHEET) || ss.insertSheet(SEALED_SHEET);
+    const cl = ss.getSheetByName(COLL_SHEET)   || ss.insertSheet(COLL_SHEET);
+
+    if (p.action === 'getAll') {
+      return respond({ cards: getAllCards(cs), sealed: getAllSealed(sl), collection: getAllCollection(cl) });
+    }
+    if (p.action === 'batchUpsertCards') {
+      ensureCardHeaders(cs);
+      (p.cards || []).forEach(c => upsertCard(cs, c));
+      // Remove rows whose IDs are no longer in the app
+      pruneRows(cs, (p.cards || []).map(c => c.id));
+      return respond({ ok: true });
+    }
+    if (p.action === 'upsert')         { ensureCardHeaders(cs); upsertCard(cs, p.card);          return respond({ ok: true }); }
+    if (p.action === 'delete')         { deleteRow(cs, p.id);                                     return respond({ ok: true }); }
+    if (p.action === 'upsertSealed')   { upsertSealed(sl, p.item);                               return respond({ ok: true }); }
+    if (p.action === 'deleteSealed')   { deleteRow(sl, p.id);                                     return respond({ ok: true }); }
+    if (p.action === 'upsertCollection') { upsertCollection(cl, p.item);                         return respond({ ok: true }); }
+    if (p.action === 'deleteCollection') { deleteRow(cl, p.id);                                   return respond({ ok: true }); }
+    return respond({ error: 'Unknown action' });
+  } catch(err) {
+    return respond({ error: err.message });
+  }
+}
+
+function ensureCardHeaders(s) {
+  if (s.getLastRow() === 0) {
+    s.appendRow(['id','name','set','game','notes','firstSeen','lastSeen','mentions',
+      'priceHistory','tcgdexId','variation','livePrice','livePriceCurrency',
+      'livePriceFetchedAt','priceAvg7','priceAvg30']);
+  }
+}
+
+function cardToRow(c) {
+  return [
+    c.id || '', c.name || '', c.set || '', c.game || '', c.notes || '',
+    c.firstSeen || '', c.lastSeen || '', Number(c.mentions) || 0,
+    JSON.stringify(c.priceHistory || []),
+    c.tcgdexId || '', c.variation || '',
+    c.livePrice != null ? Number(c.livePrice) : '',
+    c.livePriceCurrency || '',
+    c.livePriceFetchedAt || '',
+    c.priceAvg7  != null ? Number(c.priceAvg7)  : '',
+    c.priceAvg30 != null ? Number(c.priceAvg30) : ''
+  ];
+}
+
+function getAllCards(s) {
+  const r = s.getDataRange().getValues();
+  if (r.length <= 1) return [];
+  // Skip header row; tolerate old 8-column rows by defaulting missing columns.
+  // OLD schema (8 cols): id, name, set, game, notes, firstSeen, mentions, priceHistory
+  // NEW schema (16 cols): id, name, set, game, notes, firstSeen, lastSeen, mentions, priceHistory, ...
+  // Detect old schema: col 6 is a number (mentions) and col 7 is JSON array string (priceHistory)
+  return r.slice(1).filter(x => x[0]).map(x => {
+    const isOldSchema = x.length <= 8 || (typeof Number(x[6]) === 'number' && !isNaN(Number(x[6])) && String(x[6]).trim() !== '' && !String(x[6]).startsWith('[') && (x[8] === undefined || x[8] === ''));
+    if (isOldSchema) {
+      // Old layout: col6=mentions, col7=priceHistory
+      return {
+        id: x[0], name: x[1], set: x[2], game: x[3], notes: x[4],
+        firstSeen: x[5], lastSeen: x[5], mentions: Number(x[6]) || 0,
+        priceHistory: (function() { try { return JSON.parse(x[7] || '[]'); } catch(e) { return []; } })(),
+        tcgdexId: null, variation: null, livePrice: null,
+        livePriceCurrency: null, livePriceFetchedAt: null,
+        priceAvg7: null, priceAvg30: null
+      };
+    }
+    // New layout: col6=lastSeen, col7=mentions, col8=priceHistory
+    return {
+      id: x[0], name: x[1], set: x[2], game: x[3], notes: x[4],
+      firstSeen: x[5], lastSeen: x[6] || x[5], mentions: Number(x[7]) || 0,
+      priceHistory: (function() { try { return JSON.parse(x[8] || '[]'); } catch(e) { return []; } })(),
+      tcgdexId:           x[9]  || null,
+      variation:          x[10] || null,
+      livePrice:          x[11] !== '' && x[11] != null ? Number(x[11]) : null,
+      livePriceCurrency:  x[12] || null,
+      livePriceFetchedAt: x[13] || null,
+      priceAvg7:          x[14] !== '' && x[14] != null ? Number(x[14]) : null,
+      priceAvg30:         x[15] !== '' && x[15] != null ? Number(x[15]) : null
+    };
+  });
+}
+
+function getAllSealed(s) {
+  const r = s.getDataRange().getValues();
+  if (r.length <= 1) return [];
+  return r.slice(1).filter(x => x[0]).map(x => ({
+    id: x[0], name: x[1], game: x[2], type: x[3], set: x[4], notes: x[5],
+    firstSeen: x[6], lastSeen: x[7], mentions: Number(x[8]) || 0,
+    lastPrice: x[9] || null, priceHistory: JSON.parse(x[10] || '[]')
+  }));
+}
+
+function getAllCollection(s) {
+  const r = s.getDataRange().getValues();
+  if (r.length <= 1) return [];
+  return r.slice(1).filter(x => x[0]).map(x => ({
+    id: x[0], cardName: x[1], set: x[2], game: x[3], condition: x[4],
+    rawCondition: x[5] || null, variation: x[6] || null,
+    purchasePrice: x[7] || null, purchaseCurrency: x[8] || 'CHF',
+    purchaseDate: x[9] || null, notes: x[10] || '', addedAt: x[11] || ''
+  }));
+}
+
+function upsertCard(s, c) {
+  const row = cardToRow(c);
+  const r = s.getDataRange().getValues();
+  for (let i = 1; i < r.length; i++) {
+    if (r[i][0] == c.id) {
+      s.getRange(i + 1, 1, 1, 16).setValues([row]);
+      return;
+    }
+  }
+  s.appendRow(row);
+}
+
+function pruneRows(s, keepIds) {
+  const r = s.getDataRange().getValues();
+  for (let i = r.length - 1; i >= 1; i--) {
+    if (r[i][0] && !keepIds.includes(String(r[i][0]))) {
+      s.deleteRow(i + 1);
+    }
+  }
+}
+
+function upsertSealed(s, i) {
+  const ph = JSON.stringify(i.priceHistory || []);
+  const row = [i.id,i.name,i.game||'',i.type||'',i.set||'',i.notes||'',i.firstSeen,i.lastSeen,i.mentions,i.lastPrice||'',ph];
+  const r = s.getDataRange().getValues();
+  for (let x = 1; x < r.length; x++) {
+    if (r[x][0] == i.id) { s.getRange(x+1,1,1,11).setValues([row]); return; }
+  }
+  s.appendRow(row);
+}
+
+function upsertCollection(s, i) {
+  const row = [i.id,i.cardName||'',i.set||'',i.game||'',i.condition||'raw',i.rawCondition||'',
+    i.variation||'',i.purchasePrice||'',i.purchaseCurrency||'CHF',i.purchaseDate||'',i.notes||'',i.addedAt||''];
+  const r = s.getDataRange().getValues();
+  for (let x = 1; x < r.length; x++) {
+    if (r[x][0] == i.id) { s.getRange(x+1,1,1,12).setValues([row]); return; }
+  }
+  s.appendRow(row);
+}
+
+function deleteRow(s, id) {
+  const r = s.getDataRange().getValues();
+  for (let i = r.length - 1; i >= 1; i--) {
+    if (r[i][0] == id) { s.deleteRow(i + 1); return; }
+  }
+}
+
+function respond(d) {
+  return ContentService.createTextOutput(JSON.stringify(d)).setMimeType(ContentService.MimeType.JSON);
+}</div>
+          <button class="copy-btn" onclick="copyCode()">Copy</button>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Deploy / Redeploy as Web App</div>
+          <div class="step-desc">Click <strong>Deploy → New deployment</strong> → select <strong>Web app</strong> → Execute as: <strong>Me</strong> → Who has access: <strong>Anyone</strong> → Deploy → Authorize → copy the URL ending in <code style="color:var(--teal)">/exec</code>. (If you had a previous deployment, create a new one — you’ll get a new URL.)</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Paste URL and connect</div>
+          <div class="url-connect-group">
+            <input type="text" id="sheetsUrlInput" placeholder="https://script.google.com/macros/s/…/exec" />
+            <button class="btn btn-primary" onclick="connectSheets()">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              Connect
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT CARD MODAL -->
+<div class="modal-overlay" id="editCardModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Card</div>
+      <button class="modal-close" onclick="closeModal('editCardModal')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="form-grid" style="margin-bottom:var(--space-4)">
+      <div class="form-group span-2">
+        <label>Card Name</label>
+        <input type="text" id="editCardName" placeholder="e.g. Charizard ex" />
+      </div>
+      <div class="form-group">
+        <label>Set / Set ID</label>
+        <input type="text" id="editCardSet" placeholder="sv01" />
+      </div>
+      <div class="form-group">
+        <label>Game</label>
+        <select id="editCardGame">
+          <option value="Pokémon">Pokémon</option>
+          <option value="One Piece">One Piece</option>
+          <option value="Lorcana">Lorcana</option>
+          <option value="MTG">MTG</option>
+          <option value="Yu-Gi-Oh!">Yu-Gi-Oh!</option>
+          <option value="Digimon">Digimon</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>TCGdex Card ID <span style="color:var(--text-faint);font-weight:400;font-size:var(--text-xs)">(e.g. sv01-1)</span></label>
+        <input type="text" id="editCardTcgdexId" placeholder="e.g. sv01-1" />
+      </div>
+      <div class="form-group">
+        <label>Variation</label>
+        <select id="editCardVariation">
+          <option value="">Any / Unknown</option>
+          <option value="Normal">Normal</option>
+          <option value="Holo">Holo</option>
+          <option value="Reverse Holo">Reverse Holo</option>
+          <option value="Full Art">Full Art</option>
+          <option value="Alt Art">Alt Art</option>
+          <option value="Promo">Promo</option>
+          <option value="Special Illustration">Special Illustration</option>
+        </select>
+      </div>
+      <div class="form-group span-2">
+        <label>Notes</label>
+        <input type="text" id="editCardNotes" placeholder="Source, reason…" />
+      </div>
+    </div>
+    <div style="display:flex;gap:var(--space-2);justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('editCardModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditCard()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRICE LOG MODAL -->
+<div class="modal-overlay" id="priceModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title" id="priceModalTitle">Price History</div>
+      <button class="modal-close" onclick="closeModal('priceModal')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div id="priceModalContent"></div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <div class="modal-title" id="confirmTitle">Confirm</div>
+      <button class="modal-close" onclick="closeModal('confirmModal')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <p id="confirmMessage" style="color:var(--text-muted);font-size:var(--text-sm);margin-bottom:var(--space-5)"></p>
+    <div style="display:flex;gap:var(--space-2);justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancel</button>
+      <button class="btn btn-danger" id="confirmOk">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <!-- SVG LOGO: holographic diamond card mark -->
+      <svg class="sidebar-logo-icon" viewBox="0 0 32 32" fill="none" aria-label="Holo Tracker">
+        <defs>
+          <linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7c6bff"/>
+            <stop offset="50%" stop-color="#2ec4b6"/>
+            <stop offset="100%" stop-color="#f5c518"/>
+          </linearGradient>
+        </defs>
+        <!-- Card shape -->
+        <rect x="4" y="2" width="24" height="28" rx="3" fill="none" stroke="url(#logoGrad)" stroke-width="2"/>
+        <!-- Diamond -->
+        <path d="M16 8 L22 16 L16 22 L10 16 Z" fill="url(#logoGrad)" opacity="0.9"/>
+        <!-- Shine line -->
+        <line x1="10" y1="16" x2="22" y2="16" stroke="#fff" stroke-width="0.75" stroke-opacity="0.5"/>
+      </svg>
+      <div class="sidebar-logo-text">
+        <span class="brand">HOLO TRACKER</span>
+        <span class="sub">TCG Intelligence</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebarNav">
+      <div class="nav-section-label">Tracking</div>
+      <div class="nav-item active" data-page="tracker" onclick="switchPage('tracker', this)">
+        <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+        <span class="nav-label">Tracker</span>
+        <span class="nav-badge" id="navBadgeTracker" style="display:none">0</span>
+      </div>
+      <div class="nav-item" data-page="sealed" onclick="switchPage('sealed', this)">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        <span class="nav-label">Sealed</span>
+        <span class="nav-badge" id="navBadgeSealed" style="display:none">0</span>
+      </div>
+      <div class="nav-item" data-page="collection" onclick="switchPage('collection', this)">
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span class="nav-label">Collection</span>
+        <span class="nav-badge" id="navBadgeCollection" style="display:none">0</span>
+      </div>
+
+      <div class="nav-section-label" style="margin-top:var(--space-2)">Analytics</div>
+      <div class="nav-item" data-page="dashboard" onclick="switchPage('dashboard', this)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </div>
+      <div class="nav-item" data-page="sets" onclick="switchPage('sets', this)">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span class="nav-label">Sets</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sheets-status">
+        <div class="sheets-dot" id="sheetsDot"></div>
+        <span id="sheetsStatusLabel" class="nav-label">Not connected</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 var(--space-1)">
+        <button class="btn-icon" onclick="openModal('sheetsModal')" title="Connect Google Sheets">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </button>
+        <button class="btn-icon" data-theme-toggle title="Toggle theme" id="themeBtn">
+          <svg viewBox="0 0 24 24" id="themeIcon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="btn-icon" onclick="toggleSidebar()" title="Collapse sidebar" id="collapseBtn">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile nav overlay (tap to close) -->
+  <div id="mobileNavOverlay" onclick="toggleMobileNav()"></div>
+
+  <!-- MAIN AREA -->
+  <main class="main-area">
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <button class="btn-icon" id="mobileMenuBtn" style="display:none" onclick="toggleMobileNav()">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title" id="topbarTitle">Tracker</div>
+      <div class="topbar-kpis" id="topbarKpis">
+        <div class="topbar-kpi">
+          <span class="topbar-kpi-val" id="kpiCards">0</span>
+          <span class="topbar-kpi-label">Cards</span>
+        </div>
+        <div class="topbar-kpi">
+          <span class="topbar-kpi-val" id="kpiHot">0</span>
+          <span class="topbar-kpi-label">Hot</span>
+        </div>
+        <div class="topbar-kpi">
+          <span class="topbar-kpi-val" id="kpiMentions">0</span>
+          <span class="topbar-kpi-label">Mentions</span>
+        </div>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="syncData()">
+          <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.59"/></svg>
+          <span class="btn-label">Sync</span>
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span class="btn-label">CSV</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content" id="pageContent">
+
+      <!-- ==================== TRACKER PAGE ==================== -->
+      <div class="page active" id="page-tracker">
+
+        <!-- Add Card Form -->
+        <div class="form-card">
+          <div class="form-card-header">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            <span class="form-card-title">Add Card Mention</span>
+          </div>
+          <div class="form-grid">
+            <div class="form-group span-2">
+              <label>Card Name</label>
+              <input type="text" id="cardName" placeholder="e.g. Charizard ex" />
+            </div>
+            <div class="form-group">
+              <label>Set / Set ID</label>
+              <input type="text" id="cardSet" placeholder="sv01, optional" />
+            </div>
+            <div class="form-group">
+              <label>TCGdex Card ID <span style="color:var(--text-faint);font-weight:400;font-size:var(--text-xs)">(Pokémon only, e.g. sv01-1)</span></label>
+              <input type="text" id="cardTcgdexId" placeholder="e.g. sv01-1, optional" />
+            </div>
+            <div class="form-group">
+              <label>Variation</label>
+              <select id="cardVariation">
+                <option value="">Any / Unknown</option>
+                <option value="Normal">Normal</option>
+                <option value="Holo">Holo</option>
+                <option value="Reverse Holo">Reverse Holo</option>
+                <option value="Full Art">Full Art</option>
+                <option value="Alt Art">Alt Art</option>
+                <option value="Promo">Promo</option>
+                <option value="Special Illustration">Special Illustration</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Game</label>
+              <select id="cardGame">
+                <option value="Pokémon">Pokémon</option>
+                <option value="One Piece">One Piece</option>
+                <option value="Lorcana">Lorcana</option>
+                <option value="MTG">MTG</option>
+                <option value="Yu-Gi-Oh!">Yu-Gi-Oh!</option>
+                <option value="Digimon">Digimon</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Price &amp; Currency</label>
+              <div class="price-input-group">
+                <input type="number" id="cardPrice" placeholder="optional" step="0.01" min="0" />
+                <select id="cardCurrency">
+                  <option value="CHF">CHF</option>
+                  <option value="EUR">EUR</option>
+                  <option value="USD">USD</option>
+                  <option value="GBP">GBP</option>
+                  <option value="AUD">AUD</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group span-2">
+              <label>Notes (YouTuber, reason…)</label>
+              <input type="text" id="cardNotes" placeholder="e.g. Heard on TCC Collector, hype around reprint…" />
+            </div>
+            <div class="form-group" style="align-self:end">
+              <button class="btn btn-primary" onclick="addCard()">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Card
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar" id="trackerFilterBar">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="trackerSearch" placeholder="Search cards, notes…" oninput="renderTracker()" />
+          </div>
+          <div class="filter-pills" id="trackerSignalPills">
+            <span class="pill active" data-val="all" onclick="setSignalFilter('all',this)">All</span>
+            <span class="pill pill-hot" data-val="hot" onclick="setSignalFilter('hot',this)">🔥 Hot</span>
+            <span class="pill pill-warm" data-val="warm" onclick="setSignalFilter('warm',this)">⚡ Warm</span>
+            <span class="pill pill-watch" data-val="watch" onclick="setSignalFilter('watch',this)">👁 Watch</span>
+            <span class="pill pill-buy" data-val="buy" onclick="setSignalFilter('buy',this)">💚 Buy</span>
+            <span class="pill pill-strong" data-val="strong" onclick="setSignalFilter('strong',this)">⭐ Strong</span>
+            <span class="pill pill-dip" data-val="dip" onclick="setSignalFilter('dip',this)">🛒 Dip</span>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:var(--space-2);flex-shrink:0;align-items:center">
+            <button class="btn btn-secondary btn-sm" id="refreshPricesBtn" onclick="refreshAllPrices()" title="Fetch live prices from TCGdex for all Pokémon cards with a TCGdex ID">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Refresh Prices
+            </button>
+            <select class="filter-select" id="trackerSort" onchange="renderTracker()">
+              <option value="mentions">Most Mentioned</option>
+              <option value="newest">Newest</option>
+              <option value="price_high">Price ↓</option>
+              <option value="price_low">Price ↑</option>
+              <option value="az">A–Z</option>
+            </select>
+            <select class="filter-select" id="trackerGameFilter" onchange="renderTracker()">
+              <option value="all">All Games</option>
+              <option value="Pokémon">Pokémon</option>
+              <option value="One Piece">One Piece</option>
+              <option value="Lorcana">Lorcana</option>
+              <option value="MTG">MTG</option>
+              <option value="Yu-Gi-Oh!">Yu-Gi-Oh!</option>
+              <option value="Digimon">Digimon</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Cards Table -->
+        <div class="table-wrap" id="trackerTable">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th class="sortable">Card</th>
+                  <th class="sortable">Game</th>
+                  <th class="sortable">Live Price</th>
+                  <th>7d</th>
+                  <th>30d Avg</th>
+                  <th>Gap</th>
+                  <th class="sortable">Mentions</th>
+                  <th>Signal</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="trackerBody"></tbody>
+            </table>
+          </div>
+          <div id="trackerEmpty" style="display:none">
+            <div class="empty-state">
+              <div class="empty-icon">
+                <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3"/><path d="M8 12h8M12 8v8"/></svg>
+              </div>
+              <div class="empty-title">No cards yet</div>
+              <div class="empty-desc">Add a card you heard about on YouTube, Reddit, or Twitter to start tracking its mentions and signal.</div>
+            </div>
+          </div>
+          <div class="table-footer" id="trackerFooter" style="display:none">
+            <span id="trackerCount">0 cards</span>
+            <span id="trackerTotalMentions"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== SEALED PAGE ==================== -->
+      <div class="page" id="page-sealed">
+        <div class="form-card">
+          <div class="form-card-header">
+            <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            <span class="form-card-title">Add Sealed Product</span>
+          </div>
+          <div class="form-grid">
+            <div class="form-group span-2">
+              <label>Product Name</label>
+              <input type="text" id="sealedName" placeholder="e.g. Scarlet &amp; Violet Booster Box" />
+            </div>
+            <div class="form-group">
+              <label>Game</label>
+              <select id="sealedGame">
+                <option value="Pokémon">Pokémon</option>
+                <option value="One Piece">One Piece</option>
+                <option value="Lorcana">Lorcana</option>
+                <option value="MTG">MTG</option>
+                <option value="Yu-Gi-Oh!">Yu-Gi-Oh!</option>
+                <option value="Digimon">Digimon</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Type</label>
+              <select id="sealedType">
+                <option value="Booster Box">Booster Box</option>
+                <option value="ETB">ETB</option>
+                <option value="Bundle / Blister">Bundle / Blister</option>
+                <option value="Tin / Collection">Tin / Collection</option>
+                <option value="Special Set">Special Set</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Price Seen</label>
+              <div class="price-input-group">
+                <input type="number" id="sealedPrice" placeholder="optional" step="0.01" min="0" />
+                <select id="sealedCurrency">
+                  <option value="CHF">CHF</option><option value="EUR">EUR</option>
+                  <option value="USD">USD</option><option value="GBP">GBP</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Set / Edition</label>
+              <input type="text" id="sealedSet" placeholder="optional" />
+            </div>
+            <div class="form-group span-2">
+              <label>Notes / Source</label>
+              <input type="text" id="sealedNotes" placeholder="Where did you hear about it?" />
+            </div>
+            <div class="form-group" style="align-self:end">
+              <button class="btn btn-primary" onclick="addSealed()">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="sealedSearch" placeholder="Search products…" oninput="renderSealed()" />
+          </div>
+          <div class="filter-pills">
+            <span class="pill active" data-val="all" onclick="setSealedSignalFilter('all',this)">All</span>
+            <span class="pill pill-hot" data-val="hot" onclick="setSealedSignalFilter('hot',this)">🔥 Hot</span>
+            <span class="pill pill-warm" data-val="warm" onclick="setSealedSignalFilter('warm',this)">⚡ Warm</span>
+            <span class="pill pill-watch" data-val="watch" onclick="setSealedSignalFilter('watch',this)">👁 Watch</span>
+            <span class="pill pill-buy" data-val="buy" onclick="setSealedSignalFilter('buy',this)">💚 Buy Zone</span>
+          </div>
+          <select class="filter-select" id="sealedSort" onchange="renderSealed()">
+            <option value="mentions">Most Mentioned</option>
+            <option value="newest">Newest</option>
+            <option value="az">A–Z</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Game</th>
+                  <th>Type</th>
+                  <th>Last Price</th>
+                  <th>Mentions</th>
+                  <th>Last Seen</th>
+                  <th>Signal</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="sealedBody"></tbody>
+            </table>
+          </div>
+          <div id="sealedEmpty" style="display:none">
+            <div class="empty-state">
+              <div class="empty-icon">
+                <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+              </div>
+              <div class="empty-title">No sealed products</div>
+              <div class="empty-desc">Track sealed products like booster boxes and ETBs you've heard mentioned.</div>
+            </div>
+          </div>
+          <div class="table-footer" id="sealedFooter" style="display:none">
+            <span id="sealedCount">0 products</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== COLLECTION PAGE ==================== -->
+      <div class="page" id="page-collection">
+        <div class="form-card">
+          <div class="form-card-header">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span class="form-card-title">Add to Collection</span>
+          </div>
+          <div class="form-grid">
+            <div class="form-group span-2">
+              <label>Card Name</label>
+              <input type="text" id="collCardName" placeholder="e.g. Charizard ex" />
+            </div>
+            <div class="form-group">
+              <label>Set / Set ID</label>
+              <input type="text" id="collSet" placeholder="sv01" />
+            </div>
+            <div class="form-group">
+              <label>Game</label>
+              <select id="collGame">
+                <option value="Pokémon">Pokémon</option>
+                <option value="One Piece">One Piece</option>
+                <option value="Lorcana">Lorcana</option>
+                <option value="MTG">MTG</option>
+                <option value="Yu-Gi-Oh!">Yu-Gi-Oh!</option>
+                <option value="Digimon">Digimon</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Condition</label>
+              <select id="collCondition">
+                <option value="Raw (NM)">Raw — Near Mint</option>
+                <option value="Raw (LP)">Raw — Lightly Played</option>
+                <option value="Raw (MP)">Raw — Moderately Played</option>
+                <option value="Raw (HP)">Raw — Heavily Played</option>
+                <option value="PSA 10">PSA 10</option>
+                <option value="PSA 9">PSA 9</option>
+                <option value="PSA 8">PSA 8</option>
+                <option value="BGS 10">BGS 10</option>
+                <option value="BGS 9.5">BGS 9.5</option>
+                <option value="CGC 10">CGC 10</option>
+                <option value="Other Grade">Other Grade</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Variation</label>
+              <select id="collVariation">
+                <option value="">Auto-detect</option>
+                <option value="Normal">Normal</option>
+                <option value="Holo">Holo</option>
+                <option value="Reverse Holo">Reverse Holo</option>
+                <option value="Full Art">Full Art</option>
+                <option value="Alt Art">Alt Art</option>
+                <option value="Promo">Promo</option>
+                <option value="Special Illustration">Special Illustration</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Purchase Price</label>
+              <div class="price-input-group">
+                <input type="number" id="collPrice" placeholder="paid" step="0.01" min="0" />
+                <select id="collCurrency">
+                  <option value="CHF">CHF</option><option value="EUR">EUR</option>
+                  <option value="USD">USD</option><option value="GBP">GBP</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Purchase Date</label>
+              <input type="date" id="collDate" />
+            </div>
+            <div class="form-group">
+              <label>Copies</label>
+              <input type="number" id="collCopies" value="1" min="1" max="99" />
+            </div>
+            <div class="form-group span-2">
+              <label>Notes / Source</label>
+              <input type="text" id="collNotes" placeholder="Where purchased, any notes…" />
+            </div>
+            <div class="form-group" style="align-self:end">
+              <button class="btn btn-primary" onclick="addCollectionItem()">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collection KPIs -->
+        <div class="kpi-grid" id="collectionKpis">
+          <div class="kpi-card">
+            <div class="kpi-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <div class="kpi-label">Items</div>
+            <div class="kpi-value" id="collKpiItems">0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="kpi-label">Total Cost</div>
+            <div class="kpi-value" id="collKpiCost" style="font-size:1.4rem">—</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+            <div class="kpi-label">Graded</div>
+            <div class="kpi-value" id="collKpiGraded">0</div>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="collSearch" placeholder="Search collection…" oninput="renderCollection()" />
+          </div>
+          <div class="filter-pills">
+            <span class="pill active" data-val="all" onclick="setCollFilter('all',this,'collGradeFilter')">All</span>
+            <span class="pill" data-val="raw" onclick="setCollFilter('raw',this,'collGradeFilter')">Raw</span>
+            <span class="pill" data-val="graded" onclick="setCollFilter('graded',this,'collGradeFilter')">Graded</span>
+          </div>
+          <select class="filter-select" id="collSort" onchange="renderCollection()">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="price_desc">Price ↓</option>
+            <option value="price_asc">Price ↑</option>
+            <option value="az">A–Z</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Card · Set</th>
+                  <th>Game</th>
+                  <th>Condition</th>
+                  <th>Variation</th>
+                  <th>Paid</th>
+                  <th>Date</th>
+                  <th>Notes</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="collectionBody"></tbody>
+            </table>
+          </div>
+          <div id="collectionEmpty" style="display:none">
+            <div class="empty-state">
+              <div class="empty-icon">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <div class="empty-title">Collection empty</div>
+              <div class="empty-desc">Add cards you own to track your collection and cost basis.</div>
+            </div>
+          </div>
+          <div class="table-footer" id="collectionFooter" style="display:none">
+            <span id="collectionCount">0 items</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== DASHBOARD PAGE ==================== -->
+      <div class="page" id="page-dashboard">
+        <div class="section-header">
+          <div class="section-title">Dashboard</div>
+          <button class="btn btn-secondary btn-sm" onclick="renderDashboard()">
+            <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.59"/></svg>
+            Refresh
+          </button>
+        </div>
+
+        <!-- Dashboard KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+            <div class="kpi-label">Cards Tracked</div>
+            <div class="kpi-value" id="dashCards">0</div>
+            <div class="kpi-delta" id="dashCardsDelta">All time</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+            <div class="kpi-label">Hot Signals</div>
+            <div class="kpi-value" id="dashHot">0</div>
+            <div class="kpi-delta" id="dashHotDelta">cards + sealed</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="kpi-label">Total Mentions</div>
+            <div class="kpi-value" id="dashMentions">0</div>
+            <div class="kpi-delta">across all cards</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <div class="kpi-label">Collection Items</div>
+            <div class="kpi-value" id="dashCollection">0</div>
+            <div class="kpi-delta" id="dashCollDelta">in collection</div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">Signal Distribution</div>
+              <span class="tag tag-accent">Cards</span>
+            </div>
+            <canvas id="signalChart" height="200"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">Games Breakdown</div>
+              <span class="tag tag-accent">All</span>
+            </div>
+            <canvas id="gamesChart" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Top Mentioned Cards -->
+        <div class="table-wrap">
+          <div style="padding:var(--space-4) var(--space-5);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+            <div style="font-family:var(--font-display);font-weight:700;font-size:var(--text-base)">Top Mentioned Cards</div>
+            <span class="tag tag-accent">Leaderboard</span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:36px">#</th>
+                  <th>Card</th>
+                  <th>Game</th>
+                  <th>Mentions</th>
+                  <th>Signal</th>
+                  <th>First Seen</th>
+                </tr>
+              </thead>
+              <tbody id="dashLeaderboard"></tbody>
+            </table>
+          </div>
+          <div id="dashLeaderboardEmpty" style="display:none">
+            <div class="empty-state" style="padding:var(--space-8)">
+              <div class="empty-desc">Add cards to see the leaderboard.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mention Heatmap -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Activity Heatmap — Last 12 Weeks</div>
+          </div>
+          <div id="heatmapContainer"></div>
+          <div style="display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-3);font-size:var(--text-xs);color:var(--text-faint)">
+            <span>Less</span>
+            <div style="width:10px;height:10px;border-radius:2px;background:var(--surface-2)"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:rgba(124,107,255,0.2)"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:rgba(124,107,255,0.4)"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:rgba(124,107,255,0.65)"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:rgba(124,107,255,0.9)"></div>
+            <span>More</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== SETS PAGE ==================== -->
+      <div class="page" id="page-sets">
+        <div class="section-header">
+          <div class="section-title">TCG Sets</div>
+          <button class="btn btn-secondary btn-sm" onclick="fetchSets()">
+            <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.59"/></svg>
+            Refresh
+          </button>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="setsSearch" placeholder="Search sets…" oninput="renderSets()" />
+          </div>
+          <select class="filter-select" id="setsGameFilter" onchange="renderSets()">
+            <option value="en">Pokémon (TCGdex)</option>
+          </select>
+        </div>
+
+        <div class="table-wrap" id="setsTableWrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Set Name</th>
+                  <th>Set ID</th>
+                  <th>Cards</th>
+                  <th>Series</th>
+                  <th>Release</th>
+                </tr>
+              </thead>
+              <tbody id="setsBody"></tbody>
+            </table>
+          </div>
+          <div id="setsEmpty">
+            <div class="empty-state">
+              <div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+              <div class="empty-title">Loading sets…</div>
+              <div class="empty-desc">Fetching set data from TCGdex API.</div>
+            </div>
+          </div>
+          <div class="table-footer" id="setsFooter" style="display:none">
+            <span id="setsCount">0 sets</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </main>
+</div><!-- /app -->
+
+<!-- CARD DRAWER -->
+<div class="drawer-overlay" id="cardDrawer" onclick="closeDrawerOnOverlay(event)">
+  <div class="drawer" id="drawerPanel">
+    <div class="drawer-header">
+      <div id="drawerImgWrap"><!-- img or placeholder --></div>
+      <div class="drawer-title-area">
+        <div class="drawer-card-name" id="drawerCardName">—</div>
+        <div class="drawer-badges" id="drawerBadges"></div>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body" id="drawerBody">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</div>
+
+<script>
+// =========================================
+//   STATE
+// =========================================
+let state = {
+  cards: [],
+  sealed: [],
+  collection: [],
+  sheetsUrl: null,
+  trackerSignalFilter: 'all',
+  sealedSignalFilter: 'all',
+  collGradeFilter: 'all',
+  setsData: [],
+  charts: {},
+  editingCardId: null,
+  drawerCardId: null,
+  drawerChart: null,
+};
+
+// =========================================
+//   PERSISTENCE (in-memory only — no localStorage)
+// =========================================
+// Data lives in state object only (no localStorage in sandboxed environment)
+
+// =========================================
+//   THEME
+// =========================================
+(function() {
+  const html = document.documentElement;
+  const btn = document.getElementById('themeBtn');
+  const icon = document.getElementById('themeIcon');
+  let dark = true;
+  html.setAttribute('data-theme', 'dark');
+
+  function updateIcon() {
+    if (dark) {
+      icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+    } else {
+      icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+    }
+  }
+
+  btn.addEventListener('click', () => {
+    dark = !dark;
+    html.setAttribute('data-theme', dark ? 'dark' : 'light');
+    updateIcon();
+    // re-render charts for theme
+    if (document.getElementById('page-dashboard').classList.contains('active')) {
+      renderDashboard();
+    }
+  });
+  updateIcon();
+})();
+
+// =========================================
+//   NAVIGATION
+// =========================================
+const PAGE_TITLES = {
+  tracker: 'Tracker',
+  sealed: 'Sealed Products',
+  collection: 'Collection',
+  dashboard: 'Dashboard',
+  sets: 'Sets',
+};
+
+function switchPage(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('topbarTitle').textContent = PAGE_TITLES[page] || page;
+
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'sets' && state.setsData.length === 0) fetchSets();
+  if (page === 'collection') updateCollectionKpis();
+
+  // close mobile nav
+  document.getElementById('app').classList.remove('mobile-nav-open');
+}
+
+function toggleSidebar() {
+  const app = document.getElementById('app');
+  const btn = document.getElementById('collapseBtn');
+  app.classList.toggle('sidebar-collapsed');
+  const collapsed = app.classList.contains('sidebar-collapsed');
+  btn.querySelector('svg').innerHTML = collapsed
+    ? '<polyline points="9 18 15 12 9 6"/>'
+    : '<polyline points="15 18 9 12 15 6"/>';
+}
+
+function toggleMobileNav() {
+  document.getElementById('app').classList.toggle('mobile-nav-open');
+}
+
+// ── Mobile: form-card collapsible toggle ──
+document.querySelectorAll('.form-card-header').forEach(header => {
+  header.addEventListener('click', () => {
+    if (window.innerWidth >= 768) return; // desktop: always expanded
+    header.closest('.form-card').classList.toggle('expanded');
+  });
+});
+
+// Show mobile menu btn on small screens
+if (window.innerWidth < 768) {
+  document.getElementById('mobileMenuBtn').style.display = 'flex';
+}
+window.addEventListener('resize', () => {
+  const btn = document.getElementById('mobileMenuBtn');
+  btn.style.display = window.innerWidth < 768 ? 'flex' : 'none';
+});
+
+// =========================================
+//   MODAL HELPERS
+// =========================================
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// =========================================
+//   TOAST
+// =========================================
+function showToast(msg, type = 'info', duration = 3000) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = {
+    success: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--success)"><polyline points="20 6 9 17 4 12"/></svg>',
+    error: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--error)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    info: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  };
+  toast.innerHTML = (icons[type] || '') + msg;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('hiding');
+    setTimeout(() => toast.remove(), 200);
+  }, duration);
+}
+
+// =========================================
+//   SIGNAL ENGINE
+// =========================================
+// computeSignal accepts either a mention count (backwards compat) or a card object.
+// When given a card, it blends mention score with price momentum from TCGdex data.
+function computeSignal(cardOrMentions) {
+  let mentions, priceMomentum = 0;
+
+  if (typeof cardOrMentions === 'object' && cardOrMentions !== null) {
+    mentions = Number(cardOrMentions.mentions) || 0;
+    // Price momentum: compare avg7 vs avg30 (% change)
+    const avg7  = Number(cardOrMentions.priceAvg7)  || 0;
+    const avg30 = Number(cardOrMentions.priceAvg30) || 0;
+    if (avg7 > 0 && avg30 > 0) {
+      priceMomentum = ((avg7 - avg30) / avg30) * 100; // positive = rising, negative = falling
+    }
+  } else {
+    mentions = Number(cardOrMentions) || 0;
+  }
+
+  // Base signal from mention tiers
+  const tiers = [
+    { min: 10, sig: 'hot' },
+    { min: 7,  sig: 'strong' },
+    { min: 5,  sig: 'buy' },
+    { min: 3,  sig: 'warm' },
+    { min: 2,  sig: 'watch' },
+    { min: 1,  sig: 'dip' },
+  ];
+  const ORDER = ['none','dip','watch','warm','buy','strong','hot'];
+  let baseIdx = 0;
+  for (const t of tiers) {
+    if (mentions >= t.min) { baseIdx = ORDER.indexOf(t.sig); break; }
+  }
+
+  // Price momentum modifier: strong uptrend (+10%+) boosts one tier, downtrend (-10%+) dampens one tier
+  let adjusted = baseIdx;
+  if (priceMomentum >= 10)       adjusted = Math.min(ORDER.length - 1, baseIdx + 1);
+  else if (priceMomentum <= -10) adjusted = Math.max(0, baseIdx - 1);
+
+  return ORDER[adjusted];
+}
+
+const SIGNAL_LABELS = {
+  hot: 'HOT', strong: 'STRONG BUY', buy: 'BUY ZONE',
+  warm: 'WARM', watch: 'WATCH', dip: 'BUY DIP', none: '—',
+};
+
+function signalBadge(sig) {
+  const label = SIGNAL_LABELS[sig] || '—';
+  return `<span class="signal ${sig}"><span class="signal-dot"></span>${label}</span>`;
+}
+
+// =========================================
+//   GAME BADGE
+// =========================================
+function gameBadge(game) {
+  const cls = {
+    'Pokémon': 'pokemon', 'One Piece': 'onepiece', 'Lorcana': 'lorcana',
+    'MTG': 'mtg', 'Yu-Gi-Oh!': 'yugioh', 'Digimon': 'digimon',
+  }[game] || 'other';
+  return `<span class="game-badge ${cls}">${escHtml(game)}</span>`;
+}
+
+// =========================================
+//   HELPERS
+// =========================================
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+function fmtDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function fmtDateShort(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = Math.floor((now - d) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Yesterday';
+  if (diff < 7) return diff + 'd ago';
+  if (diff < 30) return Math.floor(diff / 7) + 'w ago';
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+}
+function fmtPrice(p, cur) {
+  if (p === null || p === undefined || p === '') return '—';
+  return `${cur || 'CHF'} ${Number(p).toFixed(2)}`;
+}
+
+function updateTopbarKpis() {
+  const hot = state.cards.filter(c => computeSignal(c) === 'hot').length
+            + state.sealed.filter(s => computeSignal(s.mentions) === 'hot').length;
+  const totalMentions = state.cards.reduce((a,c) => a + (Number(c.mentions)||0), 0);
+  document.getElementById('kpiCards').textContent = state.cards.length;
+  document.getElementById('kpiHot').textContent = hot;
+  document.getElementById('kpiMentions').textContent = totalMentions;
+
+  function setBadge(id, count) {
+    const el = document.getElementById(id);
+    if (count > 0) {
+      el.textContent = count;
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+  setBadge('navBadgeTracker', state.cards.length);
+  setBadge('navBadgeSealed', state.sealed.length);
+  setBadge('navBadgeCollection', state.collection.length);
+}
+
+// =========================================
+//   TRACKER PAGE
+// =========================================
+let trackerSignalFilter = 'all';
+
+function setSignalFilter(val, el) {
+  trackerSignalFilter = val;
+  document.querySelectorAll('#trackerSignalPills .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderTracker();
+}
+
+function addCard() {
+  const name = document.getElementById('cardName').value.trim();
+  if (!name) { showToast('Card name is required', 'error'); return; }
+
+  const game = document.getElementById('cardGame').value;
+  const existIdx = state.cards.findIndex(c => c.name.toLowerCase() === name.toLowerCase() && c.game === game);
+
+  if (existIdx >= 0) {
+    state.cards[existIdx].mentions = (Number(state.cards[existIdx].mentions) || 0) + 1;
+    state.cards[existIdx].lastSeen = Date.now();
+    const price = document.getElementById('cardPrice').value;
+    if (price) {
+      const cur = document.getElementById('cardCurrency').value;
+      state.cards[existIdx].priceHistory = state.cards[existIdx].priceHistory || [];
+      state.cards[existIdx].priceHistory.push({ date: Date.now(), price: Number(price), currency: cur });
+    }
+    // Update tcgdexId / variation if provided
+    const tcgdexId = document.getElementById('cardTcgdexId').value.trim();
+    const variation = document.getElementById('cardVariation').value;
+    if (tcgdexId) state.cards[existIdx].tcgdexId = tcgdexId;
+    if (variation) state.cards[existIdx].variation = variation;
+    showToast(`+1 mention for "${name}" — now ${state.cards[existIdx].mentions}`, 'success');
+    // Auto-fetch price if tcgdexId now set
+    const cardId = state.cards[existIdx].id;
+    if (state.cards[existIdx].tcgdexId) fetchCardPrice(cardId);
+  } else {
+    const price = document.getElementById('cardPrice').value;
+    const cur = document.getElementById('cardCurrency').value;
+    const tcgdexId = document.getElementById('cardTcgdexId').value.trim();
+    const variation = document.getElementById('cardVariation').value;
+    const card = {
+      id: uid(),
+      name,
+      set: document.getElementById('cardSet').value.trim(),
+      game,
+      notes: document.getElementById('cardNotes').value.trim(),
+      firstSeen: Date.now(),
+      lastSeen: Date.now(),
+      mentions: 1,
+      priceHistory: price ? [{ date: Date.now(), price: Number(price), currency: cur }] : [],
+      tcgdexId: tcgdexId || null,
+      variation: variation || null,
+      livePrice: null,
+      livePriceCurrency: null,
+      livePriceFetchedAt: null,
+      priceAvg7: null,
+      priceAvg30: null,
+    };
+    state.cards.unshift(card);
+    showToast(`Added "${name}"`, 'success');
+    // Auto-fetch price if tcgdexId provided
+    if (tcgdexId) fetchCardPrice(card.id);
+  }
+
+  // Clear form
+  document.getElementById('cardName').value = '';
+  document.getElementById('cardSet').value = '';
+  document.getElementById('cardPrice').value = '';
+  document.getElementById('cardNotes').value = '';
+  document.getElementById('cardTcgdexId').value = '';
+  document.getElementById('cardVariation').value = '';
+
+  renderTracker();
+  updateTopbarKpis();
+  syncToSheets();
+}
+
+function deleteCard(id) {
+  confirmAction('Delete card?', 'This will remove the card and all its history.', () => {
+    state.cards = state.cards.filter(c => c.id !== id);
+    renderTracker();
+    updateTopbarKpis();
+    syncToSheets();
+    showToast('Card deleted', 'info');
+  });
+}
+
+function editCard(id) {
+  const card = state.cards.find(c => c.id === id);
+  if (!card) return;
+  state.editingCardId = id;
+  document.getElementById('editCardName').value = card.name;
+  document.getElementById('editCardSet').value = card.set || '';
+  document.getElementById('editCardGame').value = card.game || 'Pokémon';
+  document.getElementById('editCardNotes').value = card.notes || '';
+  document.getElementById('editCardTcgdexId').value = card.tcgdexId || '';
+  document.getElementById('editCardVariation').value = card.variation || '';
+  openModal('editCardModal');
+}
+
+function saveEditCard() {
+  const id = state.editingCardId;
+  if (!id) return;
+  const card = state.cards.find(c => c.id === id);
+  if (!card) return;
+  const prevTcgdexId = card.tcgdexId;
+  card.name = document.getElementById('editCardName').value.trim() || card.name;
+  card.set = document.getElementById('editCardSet').value.trim();
+  card.game = document.getElementById('editCardGame').value;
+  card.notes = document.getElementById('editCardNotes').value.trim();
+  card.tcgdexId = document.getElementById('editCardTcgdexId').value.trim() || null;
+  card.variation = document.getElementById('editCardVariation').value || null;
+  closeModal('editCardModal');
+  renderTracker();
+  syncToSheets();
+  showToast('Card updated', 'success');
+  // If tcgdexId was just added or changed, auto-fetch price
+  if (card.tcgdexId && card.tcgdexId !== prevTcgdexId) fetchCardPrice(id);
+}
+
+function bumpMention(id) {
+  const card = state.cards.find(c => c.id === id);
+  if (!card) return;
+  card.mentions = (Number(card.mentions) || 0) + 1;
+  card.lastSeen = Date.now();
+  renderTracker();
+  updateTopbarKpis();
+  syncToSheets();
+  showToast(`+1 mention — "${card.name}" now has ${card.mentions}`, 'success');
+}
+
+function renderTracker() {
+  const search = (document.getElementById('trackerSearch').value || '').toLowerCase();
+  const sort = document.getElementById('trackerSort').value;
+  const gameFilter = document.getElementById('trackerGameFilter').value;
+
+  let cards = [...state.cards];
+
+  if (search) cards = cards.filter(c =>
+    c.name.toLowerCase().includes(search) ||
+    (c.notes||'').toLowerCase().includes(search) ||
+    (c.set||'').toLowerCase().includes(search)
+  );
+  if (gameFilter !== 'all') cards = cards.filter(c => c.game === gameFilter);
+  if (trackerSignalFilter !== 'all') cards = cards.filter(c => computeSignal(c) === trackerSignalFilter);
+
+  // Sort
+  if (sort === 'mentions') cards.sort((a,b) => (Number(b.mentions)||0) - (Number(a.mentions)||0));
+  else if (sort === 'newest') cards.sort((a,b) => (b.firstSeen||0) - (a.firstSeen||0));
+  else if (sort === 'price_high') cards.sort((a,b) => lastPrice(b) - lastPrice(a));
+  else if (sort === 'price_low') cards.sort((a,b) => lastPrice(a) - lastPrice(b));
+  else if (sort === 'az') cards.sort((a,b) => a.name.localeCompare(b.name));
+
+  const maxMentions = Math.max(1, ...state.cards.map(c => Number(c.mentions)||0));
+  const tbody = document.getElementById('trackerBody');
+  const empty = document.getElementById('trackerEmpty');
+  const footer = document.getElementById('trackerFooter');
+
+  if (cards.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    footer.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  footer.style.display = '';
+  document.getElementById('trackerCount').textContent = `${cards.length} card${cards.length !== 1 ? 's' : ''}`;
+  const totalM = cards.reduce((a,c) => a + (Number(c.mentions)||0), 0);
+  document.getElementById('trackerTotalMentions').textContent = `${totalM} total mention${totalM !== 1 ? 's' : ''}`;
+
+  tbody.innerHTML = cards.map((c, i) => {
+    const sig = computeSignal(c);
+    // Live price display: prefer TCGdex live price, fallback to manual log
+    const hasLive = c.livePrice != null;
+    const displayPrice = hasLive ? c.livePrice : lastPrice(c);
+    const displayCur  = hasLive ? (c.livePriceCurrency || 'EUR') : lastCurrency(c);
+
+    // 7-day trend from TCGdex avg7/avg30
+    let trendVal = 0, trendClass = 'flat', trendStr = '';
+    if (c.priceAvg7 && c.priceAvg30) {
+      trendVal = ((c.priceAvg7 - c.priceAvg30) / c.priceAvg30) * 100;
+      trendClass = trendVal > 0 ? 'up' : trendVal < 0 ? 'down' : 'flat';
+      trendStr = trendVal === 0 ? '' : (trendVal > 0 ? `\u25b2 ${trendVal.toFixed(1)}%` : `\u25bc ${Math.abs(trendVal).toFixed(1)}%`);
+    } else {
+      const mt = priceTrend(c);
+      trendClass = mt > 0 ? 'up' : mt < 0 ? 'down' : 'flat';
+      trendStr = mt === 0 ? '' : (mt > 0 ? `\u25b2 ${mt.toFixed(1)}%` : `\u25bc ${Math.abs(mt).toFixed(1)}%`);
+    }
+
+    // 30d avg column
+    const avg30Cell = c.priceAvg30
+      ? `<span style="font-family:var(--font-mono);font-size:var(--text-xs)">${fmtPrice(c.priceAvg30, c.livePriceCurrency||'EUR')}</span><br><span style="font-size:9px;color:var(--text-faint)">30d avg</span>`
+      : '<span style="color:var(--text-faint)">\u2014</span>';
+
+    // Gap badge — manual vs market
+    let gapHtml = '<span class="gap-badge neutral">\u007e</span>';
+    const manualEntry = sanitizePriceHistory(c.priceHistory).reverse().find(p => p.source !== 'tcgdex') || null;
+    if (hasLive && manualEntry) {
+      const manP = Number(manualEntry.price);
+      const mktP = Number(c.livePrice);
+      if (mktP > 0) {
+        const gapPct = ((manP - mktP) / mktP) * 100;
+        if (Math.abs(gapPct) < 1) {
+          gapHtml = '<span class="gap-badge neutral">\u007e</span>';
+        } else if (gapPct > 0) {
+          gapHtml = `<span class="gap-badge positive">+${gapPct.toFixed(0)}%</span>`;
+        } else {
+          gapHtml = `<span class="gap-badge negative">${gapPct.toFixed(0)}%</span>`;
+        }
+      }
+    }
+
+    // Price source indicator
+    const priceSourceTag = hasLive
+      ? `<span style="font-size:10px;color:var(--teal);font-family:var(--font-mono);line-height:1">LIVE</span>`
+      : '';
+
+    // Fetch price button — only for Pok\u00e9mon, shows spinner state
+    const canFetch = c.game === 'Pok\u00e9mon';
+    const fetchBtn = canFetch
+      ? `<button class="btn-icon" id="fetchBtn-${c.id}" title="${c.tcgdexId ? 'Refresh live price from TCGdex' : 'Set TCGdex ID to enable live price'}" onclick="event.stopPropagation();fetchCardPrice('${c.id}')" ${c.tcgdexId ? '' : 'style="opacity:0.35;cursor:default"'}>
+          <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>`
+      : '';
+
+    return `<tr class="tracker-row-clickable fade-in" style="animation-delay:${i * 0.02}s" onclick="openDrawer('${c.id}')">
+      <td>
+        <div class="card-cell">
+          <span class="card-name">${escHtml(c.name)}</span>
+          ${c.tcgdexId ? `<span class="card-notes" style="color:var(--teal)">${escHtml(c.tcgdexId)}${c.variation ? ' \u00b7 ' + escHtml(c.variation) : ''}</span>` : (c.notes ? `<span class="card-notes">${escHtml(c.notes)}</span>` : '')}
+        </div>
+      </td>
+      <td>${gameBadge(c.game)}</td>
+      <td>
+        <div class="price-cell">
+          <div class="price-main" style="display:flex;align-items:center;gap:4px">${displayPrice ? fmtPrice(displayPrice, displayCur) : '\u2014'}${priceSourceTag}</div>
+          ${c.livePriceFetchedAt ? `<div style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono)">${fmtDateShort(c.livePriceFetchedAt)}</div>` : ''}
+        </div>
+      </td>
+      <td>${trendStr ? `<span class="price-trend ${trendClass}">${trendStr}</span>` : '<span style="color:var(--text-faint)">\u2014</span>'}</td>
+      <td>${avg30Cell}</td>
+      <td>${gapHtml}</td>
+      <td>
+        <div class="mention-count">
+          <span class="mention-num">${c.mentions}</span>
+          <div class="mention-bar"><div class="mention-bar-fill" style="width:${Math.min(100, (Number(c.mentions)/maxMentions)*100)}%"></div></div>
+        </div>
+      </td>
+      <td>${signalBadge(sig)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="btn-icon" title="Add mention" onclick="event.stopPropagation();bumpMention('${c.id}')">
+            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          ${fetchBtn}
+          <button class="btn-icon" title="Delete" onclick="event.stopPropagation();deleteCard('${c.id}')" style="color:var(--error)">
+            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// Ensure every priceHistory entry is a proper {date, price, currency} object.
+// Old sheets sometimes stored raw numbers or broken JSON — this normalises them.
+function sanitizePriceHistory(ph) {
+  if (!Array.isArray(ph)) return [];
+  return ph.filter(p => p != null).map(p => {
+    if (typeof p === 'object' && 'price' in p) return p; // already valid
+    // If it's a plain number, wrap it
+    const n = Number(p);
+    if (!isNaN(n) && n > 0) return { date: Date.now(), price: n, currency: 'EUR' };
+    return null;
+  }).filter(Boolean);
+}
+
+// Sanitize a full card object coming in from the sheet
+function sanitizeCard(c) {
+  if (!c || typeof c !== 'object') return c;
+  c.priceHistory = sanitizePriceHistory(c.priceHistory);
+  c.mentions = Number(c.mentions) || 0;
+  return c;
+}
+
+function lastPrice(c) {
+  const ph = sanitizePriceHistory(c.priceHistory);
+  if (ph.length === 0) return 0;
+  return Number(ph[ph.length - 1].price) || 0;
+}
+function lastCurrency(c) {
+  const ph = sanitizePriceHistory(c.priceHistory);
+  if (ph.length === 0) return 'CHF';
+  return ph[ph.length - 1].currency || 'CHF';
+}
+function priceTrend(c) {
+  const ph = sanitizePriceHistory(c.priceHistory);
+  if (ph.length < 2) return 0;
+  const last = Number(ph[ph.length - 1].price);
+  const prev = Number(ph[ph.length - 2].price);
+  if (prev === 0) return 0;
+  return ((last - prev) / prev) * 100;
+}
+
+// =========================================
+//   SPARKLINE
+// =========================================
+function sparklineHtml(c) {
+  if (!c.priceHistory || c.priceHistory.length < 2) return '<span style="color:var(--text-faint);font-size:var(--text-xs)">—</span>';
+  return `<canvas class="sparkline" id="spark-${c.id}" width="64" height="28"></canvas>`;
+}
+
+function drawSparkline(c) {
+  const canvas = document.getElementById(`spark-${c.id}`);
+  if (!canvas) return;
+  const ph = sanitizePriceHistory(c.priceHistory);
+  if (ph.length < 2) return;
+  const ctx = canvas.getContext('2d');
+  const prices = ph.map(p => Number(p.price));
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const range = max - min || 1;
+  const W = 64, H = 28, PAD = 3;
+
+  ctx.clearRect(0, 0, W, H);
+  const pts = prices.map((p, i) => ({
+    x: PAD + (i / (prices.length - 1)) * (W - PAD * 2),
+    y: PAD + (1 - (p - min) / range) * (H - PAD * 2),
+  }));
+
+  // gradient fill
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const color = prices[prices.length - 1] >= prices[0] ? '62,207,142' : '248,113,113';
+  grad.addColorStop(0, `rgba(${color},0.25)`);
+  grad.addColorStop(1, `rgba(${color},0)`);
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, H);
+  pts.forEach(pt => ctx.lineTo(pt.x, pt.y));
+  ctx.lineTo(pts[pts.length - 1].x, H);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // line
+  ctx.beginPath();
+  pts.forEach((pt, i) => i === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y));
+  ctx.strokeStyle = `rgba(${color},0.9)`;
+  ctx.lineWidth = 1.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+}
+
+// =========================================
+//   PRICE MODAL
+// =========================================
+function openPriceModal(id) {
+  const card = state.cards.find(c => c.id === id);
+  if (!card) return;
+  document.getElementById('priceModalTitle').textContent = card.name + ' — Price Log';
+
+  let html = `
+    <div style="margin-bottom:var(--space-4)">
+      <label style="display:block;margin-bottom:var(--space-2)">Log new price</label>
+      <div style="display:flex;gap:var(--space-2)">
+        <input type="number" id="priceLogVal" placeholder="e.g. 45.00" step="0.01" min="0" style="flex:1" />
+        <select id="priceLogCur" style="width:70px">
+          <option value="CHF">CHF</option><option value="EUR">EUR</option>
+          <option value="USD">USD</option><option value="GBP">GBP</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="logPrice('${id}')">Log</button>
+      </div>
+    </div>
+  `;
+
+  const _safePh = sanitizePriceHistory(card.priceHistory);
+  if (_safePh.length > 0) {
+    html += `<div style="font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:var(--space-2)">History</div>`;
+    html += `<div style="display:flex;flex-direction:column;gap:var(--space-1)">`;
+    [..._safePh].reverse().forEach(p => {
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-2) 0;border-bottom:1px solid var(--border)">
+        <span style="font-family:var(--font-mono);font-size:var(--text-sm)">${fmtPrice(p.price, p.currency)}</span>
+        <span style="font-size:var(--text-xs);color:var(--text-muted)">${fmtDate(p.date)}</span>
+      </div>`;
+    });
+    html += '</div>';
+  } else {
+    html += `<p style="font-size:var(--text-sm);color:var(--text-muted)">No prices logged yet.</p>`;
+  }
+
+  document.getElementById('priceModalContent').innerHTML = html;
+  openModal('priceModal');
+}
+
+function logPrice(id) {
+  const card = state.cards.find(c => c.id === id);
+  if (!card) return;
+  const val = document.getElementById('priceLogVal').value;
+  const cur = document.getElementById('priceLogCur').value;
+  if (!val) return;
+  card.priceHistory = card.priceHistory || [];
+  card.priceHistory.push({ date: Date.now(), price: Number(val), currency: cur });
+  showToast('Price logged', 'success');
+  openPriceModal(id); // re-render modal
+  renderTracker();
+  syncToSheets();
+}
+
+// =========================================
+//   TCGDEX LIVE PRICE FETCHING
+// =========================================
+
+// Variation key map: map user-friendly variation names to TCGdex pricing keys
+function getPriceForVariation(pricing, variation) {
+  const cm = pricing && pricing.cardmarket;
+  const tcp = pricing && pricing.tcgplayer;
+
+  // Determine which Cardmarket field to use based on variation
+  let cmPrice = null;
+  if (cm) {
+    const v = (variation || '').toLowerCase();
+    if (v.includes('reverse')) {
+      cmPrice = cm['avg30-reverse'] || cm['avg7-reverse'] || cm['avg1-reverse'] || cm.reverse || cm.avg30 || cm.avg7 || cm.avg1 || cm.avg || null;
+    } else if (v.includes('holo') || v.includes('full art') || v.includes('alt art') || v.includes('special')) {
+      cmPrice = cm['avg30-holo'] || cm['avg7-holo'] || cm['avg1-holo'] || cm['low-holo'] || cm.avg30 || cm.avg7 || cm.avg || null;
+    } else {
+      cmPrice = cm.avg30 || cm.avg7 || cm.avg1 || cm.avg || null;
+    }
+  }
+  // TCGPlayer market price (USD) as fallback
+  const tcpPrice = tcp && (tcp.marketPrice || tcp.midPrice || tcp.lowPrice) || null;
+
+  return { cmPrice, tcpPrice, cm, tcp };
+}
+
+async function fetchCardPrice(cardId) {
+  const card = state.cards.find(c => c.id === cardId);
+  if (!card) return;
+  if (!card.tcgdexId) {
+    showToast(`"${card.name}" has no TCGdex ID — edit the card to add one`, 'error');
+    return;
+  }
+
+  // Visual spinner on the row button
+  const btn = document.getElementById(`fetchBtn-${cardId}`);
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
+  }
+
+  try {
+    // Normalise ID: some sets use zero-padded numbers (sv03.5-006 not sv03.5-6)
+    // Try exact ID first, then retry with zero-padded card number
+    let rawId = card.tcgdexId.trim();
+    let res = await fetch(`https://api.tcgdex.net/v2/en/cards/${encodeURIComponent(rawId)}`);
+    if (!res.ok) {
+      // Attempt to zero-pad: split on last hyphen, pad number to 3 digits
+      const lastHyphen = rawId.lastIndexOf('-');
+      if (lastHyphen > 0) {
+        const setpart = rawId.slice(0, lastHyphen);
+        const numpart = rawId.slice(lastHyphen + 1).replace(/^\d+$/, n => n.padStart(3, '0'));
+        const paddedId = `${setpart}-${numpart}`;
+        if (paddedId !== rawId) {
+          res = await fetch(`https://api.tcgdex.net/v2/en/cards/${encodeURIComponent(paddedId)}`);
+          if (res.ok) rawId = paddedId; // update if found
+        }
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    }
+    const data = await res.json();
+
+    const pricing = data.pricing || {};
+    const { cmPrice, tcpPrice, cm } = getPriceForVariation(pricing, card.variation);
+
+    // Prefer Cardmarket EUR price, fallback to TCGPlayer USD
+    let livePrice = null, livePriceCurrency = null;
+    if (cmPrice != null) {
+      livePrice = Number(cmPrice);
+      livePriceCurrency = 'EUR';
+    } else if (tcpPrice != null) {
+      livePrice = Number(tcpPrice);
+      livePriceCurrency = 'USD';
+    }
+
+    if (livePrice === null) {
+      showToast(`No price data available for "${card.name}" (${card.tcgdexId})`, 'info');
+    } else {
+      // Store live price + 7d/30d averages for signal computation
+      card.livePrice = livePrice;
+      card.livePriceCurrency = livePriceCurrency;
+      card.livePriceFetchedAt = Date.now();
+      card.priceAvg7  = cm ? (Number(cm.avg7)  || null) : null;
+      card.priceAvg30 = cm ? (Number(cm.avg30) || null) : null;
+      card.priceAvg1  = cm ? (Number(cm.avg1)  || null) : null;
+      card.priceLow   = cm ? (Number(cm.low)   || null) : null;
+      card.priceTrend = cm ? (cm.trend         || null) : null;
+
+      // Also push to manual priceHistory for sparkline continuity
+      card.priceHistory = card.priceHistory || [];
+      card.priceHistory.push({ date: Date.now(), price: livePrice, currency: livePriceCurrency, source: 'tcgdex' });
+
+      // Store card image (high res for drawer, low res as fallback)
+      if (data.image) {
+        card.cardImageUrl = data.image + '/high.webp';
+        if (!card.imageUrl) card.imageUrl = data.image + '/low.webp';
+      }
+      // Store verified name from API
+      if (data.name) card.tcgdexName = data.name;
+
+      showToast(`✓ ${card.name}: ${livePriceCurrency} ${livePrice.toFixed(2)}${cm && cm.avg7 ? ' (7d avg: ' + Number(cm.avg7).toFixed(2) + ')' : ''}`, 'success', 4000);
+      renderTracker();
+      updateTopbarKpis();
+      syncToSheets();
+    }
+  } catch (err) {
+    console.error('TCGdex fetch error:', err);
+    showToast(`Failed to fetch price for "${card.name}": ${err.message}`, 'error');
+  } finally {
+    // Restore button if still in DOM (renderTracker may have re-rendered it)
+    const btn2 = document.getElementById(`fetchBtn-${cardId}`);
+    if (btn2) {
+      btn2.disabled = false;
+      btn2.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+    }
+  }
+}
+
+async function refreshAllPrices() {
+  const toFetch = state.cards.filter(c => c.tcgdexId && c.game === 'Pokémon');
+  if (toFetch.length === 0) {
+    showToast('No Pokémon cards with a TCGdex ID found. Add a TCGdex ID via Edit.', 'info', 4000);
+    return;
+  }
+
+  const btn = document.getElementById('refreshPricesBtn');
+  if (btn) { btn.disabled = true; btn.textContent = `Fetching (0/${toFetch.length})…`; }
+
+  let done = 0, success = 0, fail = 0;
+  for (const card of toFetch) {
+    try {
+      let rId = card.tcgdexId.trim();
+      let res = await fetch(`https://api.tcgdex.net/v2/en/cards/${encodeURIComponent(rId)}`);
+      if (!res.ok) {
+        const lh = rId.lastIndexOf('-');
+        if (lh > 0) {
+          const sp = rId.slice(0, lh);
+          const np = rId.slice(lh + 1).replace(/^\d+$/, n => n.padStart(3, '0'));
+          const pid = `${sp}-${np}`;
+          if (pid !== rId) res = await fetch(`https://api.tcgdex.net/v2/en/cards/${encodeURIComponent(pid)}`);
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      const pricing = data.pricing || {};
+      const { cmPrice, tcpPrice, cm } = getPriceForVariation(pricing, card.variation);
+
+      let livePrice = null, livePriceCurrency = null;
+      if (cmPrice != null) { livePrice = Number(cmPrice); livePriceCurrency = 'EUR'; }
+      else if (tcpPrice != null) { livePrice = Number(tcpPrice); livePriceCurrency = 'USD'; }
+
+      if (livePrice !== null) {
+        card.livePrice = livePrice;
+        card.livePriceCurrency = livePriceCurrency;
+        card.livePriceFetchedAt = Date.now();
+        card.priceAvg7  = cm ? (Number(cm.avg7)  || null) : null;
+        card.priceAvg30 = cm ? (Number(cm.avg30) || null) : null;
+        card.priceAvg1  = cm ? (Number(cm.avg1)  || null) : null;
+        card.priceLow   = cm ? (Number(cm.low)   || null) : null;
+        card.priceTrend = cm ? (cm.trend         || null) : null;
+        card.priceHistory = card.priceHistory || [];
+        card.priceHistory.push({ date: Date.now(), price: livePrice, currency: livePriceCurrency, source: 'tcgdex' });
+        if (data.image) {
+          card.cardImageUrl = data.image + '/high.webp';
+          if (!card.imageUrl) card.imageUrl = data.image + '/low.webp';
+        }
+        if (data.name) card.tcgdexName = data.name;
+        success++;
+      } else {
+        fail++;
+      }
+    } catch (e) {
+      fail++;
+    }
+    done++;
+    if (btn) btn.textContent = `Fetching (${done}/${toFetch.length})…`;
+    // Small delay to be polite to the API
+    if (done < toFetch.length) await new Promise(r => setTimeout(r, 250));
+  }
+
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh Prices';
+  }
+  renderTracker();
+  updateTopbarKpis();
+  syncToSheets();
+  showToast(`Prices refreshed: ${success} updated, ${fail} failed`, success > 0 ? 'success' : 'info', 4000);
+}
+
+// =========================================
+//   CONFIRM DIALOG
+// =========================================
+function confirmAction(title, msg, onOk) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').textContent = msg;
+  const okBtn = document.getElementById('confirmOk');
+  const newOk = okBtn.cloneNode(true);
+  okBtn.parentNode.replaceChild(newOk, okBtn);
+  newOk.addEventListener('click', () => {
+    closeModal('confirmModal');
+    onOk();
+  });
+  openModal('confirmModal');
+}
+
+// =========================================
+//   SEALED PAGE
+// =========================================
+let sealedSignalFilter = 'all';
+
+function setSealedSignalFilter(val, el) {
+  sealedSignalFilter = val;
+  document.querySelectorAll('#page-sealed .filter-pills .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderSealed();
+}
+
+function addSealed() {
+  const name = document.getElementById('sealedName').value.trim();
+  if (!name) { showToast('Product name is required', 'error'); return; }
+
+  const existIdx = state.sealed.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
+  if (existIdx >= 0) {
+    state.sealed[existIdx].mentions = (Number(state.sealed[existIdx].mentions) || 0) + 1;
+    state.sealed[existIdx].lastSeen = Date.now();
+    showToast(`+1 mention for "${name}"`, 'success');
+  } else {
+    const price = document.getElementById('sealedPrice').value;
+    const cur = document.getElementById('sealedCurrency').value;
+    const item = {
+      id: uid(),
+      name,
+      game: document.getElementById('sealedGame').value,
+      type: document.getElementById('sealedType').value,
+      set: document.getElementById('sealedSet').value.trim(),
+      notes: document.getElementById('sealedNotes').value.trim(),
+      firstSeen: Date.now(),
+      lastSeen: Date.now(),
+      mentions: 1,
+      lastPrice: price ? Number(price) : null,
+      lastCurrency: cur,
+      priceHistory: price ? [{ date: Date.now(), price: Number(price), currency: cur }] : [],
+    };
+    state.sealed.unshift(item);
+    showToast(`Added "${name}"`, 'success');
+  }
+
+  document.getElementById('sealedName').value = '';
+  document.getElementById('sealedPrice').value = '';
+  document.getElementById('sealedNotes').value = '';
+  renderSealed();
+  updateTopbarKpis();
+  syncToSheets();
+}
+
+function deleteSealed(id) {
+  confirmAction('Delete product?', 'This will remove the product and all its history.', () => {
+    state.sealed = state.sealed.filter(s => s.id !== id);
+    renderSealed();
+    updateTopbarKpis();
+    syncToSheets();
+    showToast('Product deleted', 'info');
+  });
+}
+
+function renderSealed() {
+  const search = (document.getElementById('sealedSearch').value || '').toLowerCase();
+  const sort = document.getElementById('sealedSort').value;
+
+  let items = [...state.sealed];
+  if (search) items = items.filter(s => s.name.toLowerCase().includes(search) || (s.notes||'').toLowerCase().includes(search));
+  if (sealedSignalFilter !== 'all') items = items.filter(s => computeSignal(s.mentions) === sealedSignalFilter);
+
+  if (sort === 'mentions') items.sort((a,b) => (Number(b.mentions)||0) - (Number(a.mentions)||0));
+  else if (sort === 'newest') items.sort((a,b) => (b.firstSeen||0) - (a.firstSeen||0));
+  else if (sort === 'az') items.sort((a,b) => a.name.localeCompare(b.name));
+
+  const tbody = document.getElementById('sealedBody');
+  const empty = document.getElementById('sealedEmpty');
+  const footer = document.getElementById('sealedFooter');
+
+  if (items.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    footer.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  footer.style.display = '';
+  document.getElementById('sealedCount').textContent = `${items.length} product${items.length !== 1 ? 's' : ''}`;
+
+  tbody.innerHTML = items.map((s, i) => {
+    const sig = computeSignal(s.mentions);
+    return `<tr class="fade-in" style="animation-delay:${i * 0.02}s">
+      <td>
+        <div class="card-cell">
+          <span class="card-name">${escHtml(s.name)}</span>
+          ${s.notes ? `<span class="card-notes">${escHtml(s.notes)}</span>` : ''}
+        </div>
+      </td>
+      <td>${gameBadge(s.game)}</td>
+      <td class="muted">${escHtml(s.type) || '—'}</td>
+      <td class="mono">${s.lastPrice ? fmtPrice(s.lastPrice, s.lastCurrency) : '—'}</td>
+      <td>
+        <div class="mention-count">
+          <span class="mention-num">${s.mentions}</span>
+          <div class="mention-bar"><div class="mention-bar-fill" style="width:${Math.min(100, (Number(s.mentions)/Math.max(1,...state.sealed.map(x=>Number(x.mentions)||0)))*100)}%"></div></div>
+        </div>
+      </td>
+      <td class="muted">${fmtDateShort(s.lastSeen || s.firstSeen)}</td>
+      <td>${signalBadge(sig)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="btn-icon" title="Add mention" onclick="bumpSealedMention('${s.id}')">
+            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="btn-icon" title="Delete" onclick="deleteSealed('${s.id}')" style="color:var(--error)">
+            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function bumpSealedMention(id) {
+  const s = state.sealed.find(x => x.id === id);
+  if (!s) return;
+  s.mentions = (Number(s.mentions)||0) + 1;
+  s.lastSeen = Date.now();
+  renderSealed();
+  updateTopbarKpis();
+  syncToSheets();
+  showToast(`+1 mention — "${s.name}" now has ${s.mentions}`, 'success');
+}
+
+// =========================================
+//   COLLECTION PAGE
+// =========================================
+let collGradeFilter = 'all';
+
+function setCollFilter(val, el, filterId) {
+  collGradeFilter = val;
+  document.querySelectorAll('#page-collection .filter-pills .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderCollection();
+}
+
+function addCollectionItem() {
+  const name = document.getElementById('collCardName').value.trim();
+  if (!name) { showToast('Card name is required', 'error'); return; }
+
+  const copies = Math.max(1, parseInt(document.getElementById('collCopies').value) || 1);
+  for (let i = 0; i < copies; i++) {
+    const item = {
+      id: uid(),
+      cardName: name,
+      set: document.getElementById('collSet').value.trim(),
+      game: document.getElementById('collGame').value,
+      condition: document.getElementById('collCondition').value,
+      variation: document.getElementById('collVariation').value,
+      purchasePrice: document.getElementById('collPrice').value ? Number(document.getElementById('collPrice').value) : null,
+      purchaseCurrency: document.getElementById('collCurrency').value,
+      purchaseDate: document.getElementById('collDate').value || null,
+      notes: document.getElementById('collNotes').value.trim(),
+      addedAt: Date.now(),
+    };
+    state.collection.unshift(item);
+  }
+
+  document.getElementById('collCardName').value = '';
+  document.getElementById('collSet').value = '';
+  document.getElementById('collPrice').value = '';
+  document.getElementById('collNotes').value = '';
+  document.getElementById('collDate').value = '';
+  document.getElementById('collCopies').value = '1';
+
+  renderCollection();
+  updateCollectionKpis();
+  updateTopbarKpis();
+  syncToSheets();
+  showToast(`Added ${copies > 1 ? copies + 'x ' : ''}"${name}"`, 'success');
+}
+
+function deleteCollectionItem(id) {
+  confirmAction('Remove from collection?', 'This will remove the card from your collection.', () => {
+    state.collection = state.collection.filter(c => c.id !== id);
+    renderCollection();
+    updateCollectionKpis();
+    updateTopbarKpis();
+    syncToSheets();
+    showToast('Removed from collection', 'info');
+  });
+}
+
+function updateCollectionKpis() {
+  const graded = state.collection.filter(c => !c.condition.startsWith('Raw')).length;
+  const totalCost = state.collection.reduce((sum, c) => sum + (c.purchasePrice || 0), 0);
+  document.getElementById('collKpiItems').textContent = state.collection.length;
+  document.getElementById('collKpiCost').textContent = totalCost > 0
+    ? `${state.collection.find(c => c.purchasePrice)?.purchaseCurrency || 'CHF'} ${totalCost.toFixed(2)}` : '—';
+  document.getElementById('collKpiGraded').textContent = graded;
+}
+
+function renderCollection() {
+  const search = (document.getElementById('collSearch').value || '').toLowerCase();
+  const sort = document.getElementById('collSort').value;
+
+  let items = [...state.collection];
+  if (search) items = items.filter(c => c.cardName.toLowerCase().includes(search) || (c.set||'').toLowerCase().includes(search));
+  if (collGradeFilter === 'raw') items = items.filter(c => c.condition.startsWith('Raw'));
+  if (collGradeFilter === 'graded') items = items.filter(c => !c.condition.startsWith('Raw'));
+
+  if (sort === 'newest') items.sort((a,b) => (b.addedAt||0) - (a.addedAt||0));
+  else if (sort === 'oldest') items.sort((a,b) => (a.addedAt||0) - (b.addedAt||0));
+  else if (sort === 'price_desc') items.sort((a,b) => (b.purchasePrice||0) - (a.purchasePrice||0));
+  else if (sort === 'price_asc') items.sort((a,b) => (a.purchasePrice||0) - (b.purchasePrice||0));
+  else if (sort === 'az') items.sort((a,b) => a.cardName.localeCompare(b.cardName));
+
+  const tbody = document.getElementById('collectionBody');
+  const empty = document.getElementById('collectionEmpty');
+  const footer = document.getElementById('collectionFooter');
+
+  if (items.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    footer.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  footer.style.display = '';
+  document.getElementById('collectionCount').textContent = `${items.length} item${items.length !== 1 ? 's' : ''}`;
+
+  tbody.innerHTML = items.map((c, i) => {
+    const isGraded = !c.condition.startsWith('Raw');
+    const condColor = isGraded ? 'var(--signal-strong)' : 'var(--text-muted)';
+    return `<tr class="fade-in" style="animation-delay:${i * 0.02}s">
+      <td>
+        <div class="card-cell">
+          <span class="card-name">${escHtml(c.cardName)}</span>
+          ${c.set ? `<span class="card-notes">${escHtml(c.set)}</span>` : ''}
+        </div>
+      </td>
+      <td>${gameBadge(c.game)}</td>
+      <td><span style="color:${condColor};font-size:var(--text-xs);font-weight:600">${escHtml(c.condition)}</span></td>
+      <td class="muted">${escHtml(c.variation) || '—'}</td>
+      <td class="mono">${c.purchasePrice ? fmtPrice(c.purchasePrice, c.purchaseCurrency) : '—'}</td>
+      <td class="muted">${c.purchaseDate ? fmtDate(new Date(c.purchaseDate).getTime()) : '—'}</td>
+      <td class="muted">${escHtml(c.notes) || '—'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="btn-icon" title="Remove" onclick="deleteCollectionItem('${c.id}')" style="color:var(--error)">
+            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// =========================================
+//   DASHBOARD
+// =========================================
+function renderDashboard() {
+  const totalCards = state.cards.length;
+  const hotCards = state.cards.filter(c => computeSignal(c) === 'hot').length;
+  const hotSealed = state.sealed.filter(s => computeSignal(s.mentions) === 'hot').length;
+  const totalMentions = state.cards.reduce((a,c) => a + (Number(c.mentions)||0), 0);
+
+  document.getElementById('dashCards').textContent = totalCards;
+  document.getElementById('dashHot').textContent = hotCards + hotSealed;
+  document.getElementById('dashMentions').textContent = totalMentions;
+  document.getElementById('dashCollection').textContent = state.collection.length;
+
+  renderSignalChart();
+  renderGamesChart();
+  renderLeaderboard();
+  renderHeatmap();
+}
+
+function getChartColors() {
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  return {
+    grid: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)',
+    text: isDark ? '#8b88a0' : '#6b6880',
+  };
+}
+
+function destroyChart(id) {
+  if (state.charts[id]) {
+    state.charts[id].destroy();
+    delete state.charts[id];
+  }
+}
+
+function renderSignalChart() {
+  destroyChart('signal');
+  const canvas = document.getElementById('signalChart');
+  if (!canvas) return;
+
+  const sigCounts = { hot:0, strong:0, buy:0, warm:0, watch:0, dip:0 };
+  state.cards.forEach(c => {
+    const s = computeSignal(c);
+    if (s in sigCounts) sigCounts[s]++;
+  });
+
+  const colors = getChartColors();
+  state.charts['signal'] = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: ['Hot', 'Strong Buy', 'Buy Zone', 'Warm', 'Watch', 'Buy Dip'],
+      datasets: [{
+        data: [sigCounts.hot, sigCounts.strong, sigCounts.buy, sigCounts.warm, sigCounts.watch, sigCounts.dip],
+        backgroundColor: ['#ff5c35','#a78bfa','#3ecf8e','#ff9f2d','#5c9eff','#f472b6'],
+        borderWidth: 2,
+        borderColor: document.documentElement.getAttribute('data-theme') === 'light' ? '#fff' : '#131117',
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: colors.text, font: { size: 11, family: "'Satoshi', sans-serif" }, padding: 12, boxWidth: 10 }
+        }
+      },
+      cutout: '65%',
+    }
+  });
+}
+
+function renderGamesChart() {
+  destroyChart('games');
+  const canvas = document.getElementById('gamesChart');
+  if (!canvas) return;
+
+  const all = [...state.cards, ...state.sealed];
+  const gameCounts = {};
+  all.forEach(c => { gameCounts[c.game] = (gameCounts[c.game] || 0) + 1; });
+
+  if (Object.keys(gameCounts).length === 0) return;
+
+  const colors = getChartColors();
+  const gameColors = {
+    'Pokémon': '#ffcb05', 'One Piece': '#ff3c32', 'Lorcana': '#5c8fff',
+    'MTG': '#b464ff', 'Yu-Gi-Oh!': '#ffaa00', 'Digimon': '#00b4c8', 'Other': '#8b88a0'
+  };
+
+  state.charts['games'] = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(gameCounts),
+      datasets: [{
+        data: Object.values(gameCounts),
+        backgroundColor: Object.keys(gameCounts).map(g => gameColors[g] || '#8b88a0'),
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: colors.text, font: { size: 11 } }, grid: { display: false } },
+        y: { ticks: { color: colors.text, font: { size: 11 }, stepSize: 1 }, grid: { color: colors.grid } }
+      }
+    }
+  });
+}
+
+function renderLeaderboard() {
+  const sorted = [...state.cards].sort((a,b) => (Number(b.mentions)||0) - (Number(a.mentions)||0)).slice(0, 10);
+  const tbody = document.getElementById('dashLeaderboard');
+  const empty = document.getElementById('dashLeaderboardEmpty');
+
+  if (sorted.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = sorted.map((c, i) => {
+    const rankColor = i === 0 ? '#f5c518' : i === 1 ? '#c0c0c0' : i === 2 ? '#cd7f32' : 'var(--text-faint)';
+    return `<tr>
+      <td style="color:${rankColor};font-weight:700;font-family:var(--font-mono)">${i+1}</td>
+      <td><div class="card-cell"><span class="card-name">${escHtml(c.name)}</span></div></td>
+      <td>${gameBadge(c.game)}</td>
+      <td>
+        <div class="mention-count">
+          <span class="mention-num">${c.mentions}</span>
+        </div>
+      </td>
+      <td>${signalBadge(computeSignal(c))}</td>
+      <td class="muted">${fmtDate(c.firstSeen)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderHeatmap() {
+  const container = document.getElementById('heatmapContainer');
+  if (!container) return;
+
+  // Build 12 weeks of data from cards
+  const weekData = {};
+  const now = Date.now();
+  for (let w = 0; w < 12; w++) {
+    const weekStart = now - (w + 1) * 7 * 86400000;
+    const weekEnd = now - w * 7 * 86400000;
+    const key = `w${11 - w}`;
+    weekData[key] = 0;
+    state.cards.forEach(c => {
+      if (c.firstSeen >= weekStart && c.firstSeen < weekEnd) weekData[key]++;
+      if (c.lastSeen >= weekStart && c.lastSeen < weekEnd) weekData[key]++;
+    });
+  }
+
+  const max = Math.max(1, ...Object.values(weekData));
+  const DAYS = 7;
+  const WEEKS = 12;
+
+  let html = '<div class="heatmap-wrap">';
+  for (let w = 0; w < WEEKS; w++) {
+    html += '<div class="heatmap-col">';
+    const val = weekData[`w${w}`] || 0;
+    const level = val === 0 ? 0 : Math.ceil((val / max) * 4);
+    for (let d = 0; d < DAYS; d++) {
+      html += `<div class="heatmap-cell" data-level="${d === Math.floor(DAYS/2) ? level : 0}" title="${val} activity"></div>`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// =========================================
+//   SETS PAGE
+// =========================================
+let allSets = [];
+
+async function fetchSets() {
+  const empty = document.getElementById('setsEmpty');
+  empty.style.display = '';
+  empty.querySelector('.empty-title').textContent = 'Loading…';
+  empty.querySelector('.empty-desc').textContent = 'Fetching Pokémon sets from TCGdex…';
+
+  try {
+    const res = await fetch('https://api.tcgdex.net/v2/en/sets');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    allSets = data;
+    renderSets();
+  } catch (e) {
+    empty.querySelector('.empty-title').textContent = 'Failed to load';
+    empty.querySelector('.empty-desc').textContent = 'Could not reach TCGdex API. Check your connection and try again.';
+    showToast('Could not load sets: ' + e.message, 'error');
+  }
+}
+
+function renderSets() {
+  const search = (document.getElementById('setsSearch').value || '').toLowerCase();
+  let sets = [...allSets];
+  if (search) sets = sets.filter(s =>
+    (s.name||'').toLowerCase().includes(search) ||
+    (s.id||'').toLowerCase().includes(search) ||
+    (s.serie?.name||'').toLowerCase().includes(search)
+  );
+
+  const tbody = document.getElementById('setsBody');
+  const empty = document.getElementById('setsEmpty');
+  const footer = document.getElementById('setsFooter');
+
+  if (sets.length === 0 && allSets.length > 0) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    empty.querySelector('.empty-title').textContent = 'No sets found';
+    empty.querySelector('.empty-desc').textContent = 'Try a different search.';
+    footer.style.display = 'none';
+    return;
+  }
+  if (allSets.length === 0) return;
+
+  empty.style.display = 'none';
+  footer.style.display = '';
+  document.getElementById('setsCount').textContent = `${sets.length} set${sets.length !== 1 ? 's' : ''}`;
+
+  tbody.innerHTML = sets.slice().reverse().map((s, i) => `
+    <tr class="fade-in" style="animation-delay:${Math.min(i, 30) * 0.01}s">
+      <td><span class="card-name">${escHtml(s.name)}</span></td>
+      <td class="mono" style="color:var(--accent)">${escHtml(s.id)}</td>
+      <td class="mono">${s.cardCount?.total ?? s.cards ?? '—'}</td>
+      <td class="muted">${escHtml(s.serie?.name) || '—'}</td>
+      <td class="muted">${escHtml(s.releaseDate) || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+// =========================================
+//   GOOGLE SHEETS SYNC
+// =========================================
+function connectSheets() {
+  const url = document.getElementById('sheetsUrlInput').value.trim();
+  if (!url || !url.includes('script.google.com')) {
+    showToast('Please enter a valid Google Apps Script URL', 'error');
+    return;
+  }
+  state.sheetsUrl = url;
+  try { localStorage.setItem('holoTrackerSheetsUrl', url); } catch(e) {}
+  updateSheetsStatus(true);
+  closeModal('sheetsModal');
+  showToast('Connected to Google Sheets!', 'success');
+  syncData();
+}
+
+function updateSheetsStatus(connected) {
+  const dot = document.getElementById('sheetsDot');
+  const label = document.getElementById('sheetsStatusLabel');
+  if (connected) {
+    dot.classList.add('connected');
+    label.textContent = 'Sheets connected';
+  } else {
+    dot.classList.remove('connected');
+    label.textContent = 'Not connected';
+  }
+}
+
+async function syncData() {
+  if (!state.sheetsUrl) {
+    showToast('Connect Google Sheets first', 'info');
+    openModal('sheetsModal');
+    return;
+  }
+  showToast('Syncing…', 'info', 2000);
+  let res, rawText, data;
+  try {
+    res = await fetch(state.sheetsUrl, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'getAll' }),
+    });
+  } catch (e) {
+    showToast('Network error — could not reach script. Check CORS / deployment.', 'error', 6000);
+    console.error('syncData fetch error:', e);
+    return;
+  }
+  try {
+    rawText = await res.text();
+    data = JSON.parse(rawText);
+  } catch (e) {
+    showToast('Script returned invalid JSON. Did you deploy the new Apps Script v2?', 'error', 8000);
+    console.error('syncData parse error. Raw response:', rawText);
+    return;
+  }
+  if (data.error) {
+    showToast('Script error: ' + data.error, 'error', 8000);
+    console.error('Apps Script error:', data.error);
+    return;
+  }
+  // Load data with per-item safety
+  if (Array.isArray(data.cards)) {
+    state.cards = data.cards.map(c => { try { return sanitizeCard(c); } catch(e) { console.warn('Bad card skipped:', c, e); return null; } }).filter(Boolean);
+  }
+  if (Array.isArray(data.sealed))     state.sealed     = data.sealed;
+  if (Array.isArray(data.collection)) state.collection = data.collection;
+  try { renderTracker(); }    catch(e) { console.error('renderTracker failed:', e); }
+  try { renderSealed(); }     catch(e) { console.error('renderSealed failed:', e); }
+  try { renderCollection(); } catch(e) { console.error('renderCollection failed:', e); }
+  try { updateTopbarKpis(); } catch(e) { console.error('updateTopbarKpis failed:', e); }
+  const count = (data.cards || []).length;
+  showToast(`Synced — ${count} card${count !== 1 ? 's' : ''} loaded`, 'success');
+}
+
+async function syncToSheets() {
+  if (!state.sheetsUrl) return;
+  try {
+    // Full batch sync — send all cards at once
+    if (state.cards.length > 0) {
+      await fetch(state.sheetsUrl, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'batchUpsertCards', cards: state.cards }),
+      });
+    }
+    // Sync sealed items one-by-one (no batch endpoint for sealed)
+    for (const item of state.sealed) {
+      await fetch(state.sheetsUrl, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'upsertSealed', item }),
+      });
+    }
+    // Sync collection items one-by-one
+    for (const item of state.collection) {
+      await fetch(state.sheetsUrl, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'upsertCollection', item }),
+      });
+    }
+  } catch (e) {
+    // silent fail — data is in memory
+    console.warn('syncToSheets failed:', e.message);
+  }
+}
+
+// =========================================
+//   CSV EXPORT
+// =========================================
+function exportCSV() {
+  const rows = [
+    ['Name','Game','Set','Mentions','Signal','Last Price','Currency','First Seen','Notes'],
+    ...state.cards.map(c => [
+      c.name, c.game, c.set||'', c.mentions, computeSignal(c),
+      lastPrice(c) || '', lastCurrency(c), fmtDate(c.firstSeen), c.notes||''
+    ])
+  ];
+  const csv = rows.map(r => r.map(x => `"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'holo-tracker-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  showToast('CSV exported', 'success');
+}
+
+// =========================================
+//   COPY CODE SNIPPET
+// =========================================
+function copyCode() {
+  const code = document.getElementById('appsScriptCode').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    showToast('Code copied!', 'success');
+  }).catch(() => {
+    showToast('Could not copy — please select and copy manually', 'error');
+  });
+}
+
+// =========================================
+//   CARD DRAWER
+// =========================================
+
+function openDrawer(cardId) {
+  const card = state.cards.find(c => c.id === cardId);
+  if (!card) return;
+  state.drawerCardId = cardId;
+
+  // Header
+  const imgWrap = document.getElementById('drawerImgWrap');
+  const imgSrc = card.cardImageUrl || card.imageUrl;
+  if (imgSrc) {
+    imgWrap.innerHTML = `<img class="drawer-img" src="${escHtml(imgSrc)}" alt="${escHtml(card.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="drawer-img-placeholder" style="display:none"><svg viewBox='0 0 24 24' width='28' height='28' stroke='currentColor' fill='none' stroke-width='1.5'><rect x='2' y='2' width='20' height='20' rx='3'/><path d='M8 12h8M12 8v8'/></svg></div>`;
+  } else {
+    imgWrap.innerHTML = `<div class="drawer-img-placeholder"><svg viewBox='0 0 24 24' width='28' height='28' stroke='currentColor' fill='none' stroke-width='1.5'><rect x='2' y='2' width='20' height='20' rx='3'/><path d='M8 12h8M12 8v8'/></svg></div>`;
+  }
+
+  document.getElementById('drawerCardName').textContent = card.name;
+  const sig = computeSignal(card);
+  document.getElementById('drawerBadges').innerHTML = signalBadge(sig) + ' ' + gameBadge(card.game || 'Other');
+
+  // Build body
+  _renderDrawerBody(card);
+
+  // Open overlay
+  document.getElementById('cardDrawer').classList.add('open');
+
+  // Draw chart after DOM settles
+  requestAnimationFrame(() => renderDrawerPriceChart(card));
+}
+
+function _renderDrawerBody(card) {
+  const cur = card.livePriceCurrency || 'EUR';
+
+  // --- Price Intelligence ---
+  const marketPrice = card.livePrice;
+  const manualEntry = sanitizePriceHistory(card.priceHistory).reverse().find(p => p.source !== 'tcgdex') || null;
+  const manualPrice = manualEntry ? Number(manualEntry.price) : null;
+  const manualCur   = manualEntry ? (manualEntry.currency || 'CHF') : null;
+
+  // Divergence
+  let divHtml = '';
+  if (marketPrice != null && manualPrice != null) {
+    const pct = ((manualPrice - marketPrice) / marketPrice) * 100;
+    const absPct = Math.abs(pct);
+    if (pct > 15) {
+      divHtml = `<div class="divergence-banner rocket"><div class="divergence-title">🚀 Manual price is ${absPct.toFixed(1)}% above market</div><div class="divergence-desc">Could be a sell opportunity or inflated local price. Market avg30: ${fmtPrice(marketPrice, cur)}</div></div>`;
+    } else if (pct < -15) {
+      divHtml = `<div class="divergence-banner dip"><div class="divergence-title">📉 Market is ${absPct.toFixed(1)}% above your manual price</div><div class="divergence-desc">Possible buy zone — market has moved. Manual: ${fmtPrice(manualPrice, manualCur)}</div></div>`;
+    } else {
+      divHtml = `<div class="divergence-banner aligned"><div class="divergence-title">✅ Prices are in line</div><div class="divergence-desc">Manual and market prices are within 15% of each other.</div></div>`;
+    }
+  } else if (marketPrice != null) {
+    divHtml = `<div class="divergence-banner aligned"><div class="divergence-title">Market price available</div><div class="divergence-desc">Log a manual price to enable divergence analysis.</div></div>`;
+  } else if (manualPrice != null) {
+    divHtml = `<div class="divergence-banner aligned"><div class="divergence-title">Manual price logged</div><div class="divergence-desc">Fetch from TCGdex to enable divergence analysis.</div></div>`;
+  } else {
+    divHtml = `<div class="divergence-banner aligned"><div class="divergence-title">No price data yet</div><div class="divergence-desc">Fetch from TCGdex or log a manual price to get started.</div></div>`;
+  }
+
+  // Momentum pills
+  let momentumHtml = '';
+  if (card.priceAvg7 != null && card.priceAvg30 != null && card.priceAvg30 > 0) {
+    const pct7d = ((card.priceAvg7 - card.priceAvg30) / card.priceAvg30) * 100;
+    const cls7d = pct7d > 0 ? 'up' : pct7d < 0 ? 'down' : 'flat';
+    const lbl7d = pct7d === 0 ? '7d ─' : (pct7d > 0 ? `7d ▲ ${pct7d.toFixed(1)}%` : `7d ▼ ${Math.abs(pct7d).toFixed(1)}%`);
+    momentumHtml += `<span class="momentum-pill ${cls7d}">${lbl7d}</span>`;
+  }
+  if (card.priceAvg1 != null && card.priceAvg30 != null && card.priceAvg30 > 0) {
+    const pct1d = ((card.priceAvg1 - card.priceAvg30) / card.priceAvg30) * 100;
+    const cls1d = pct1d > 0 ? 'up' : pct1d < 0 ? 'down' : 'flat';
+    const lbl1d = pct1d === 0 ? '1d ─' : (pct1d > 0 ? `1d ▲ ${pct1d.toFixed(1)}%` : `1d ▼ ${Math.abs(pct1d).toFixed(1)}%`);
+    momentumHtml += `<span class="momentum-pill ${cls1d}">${lbl1d}</span>`;
+  }
+  if (card.priceAvg30 != null) {
+    momentumHtml += `<span class="momentum-pill flat">30d avg ${fmtPrice(card.priceAvg30, cur)}</span>`;
+  }
+  if (card.priceLow != null) {
+    momentumHtml += `<span class="momentum-pill flat">Low ${fmtPrice(card.priceLow, cur)}</span>`;
+  }
+
+  // Price history list
+  const history = sanitizePriceHistory(card.priceHistory);
+  const priceLogListHtml = history.length === 0
+    ? `<div style="color:var(--text-faint);font-size:var(--text-xs);padding:var(--space-2)">No entries yet.</div>`
+    : [...history].reverse().map((p, i) => {
+        const realIdx = history.length - 1 - i;
+        const src = p.source === 'tcgdex' ? 'live' : 'manual';
+        return `<div class="price-log-entry">
+          <span class="price-log-source ${src}">${src === 'live' ? 'LIVE' : 'MANUAL'}</span>
+          <span style="font-family:var(--font-mono);font-size:var(--text-sm);font-weight:500">${fmtPrice(p.price, p.currency)}</span>
+          <span style="font-size:var(--text-xs);color:var(--text-muted);margin-left:auto;margin-right:var(--space-2)">${fmtDate(p.date)}</span>
+          <button class="price-log-delete" onclick="deleteDrawerPriceEntry('${card.id}', ${realIdx})" title="Remove entry">×</button>
+        </div>`;
+      }).join('');
+
+  // Fetch button label
+  const canFetch = card.game === 'Pok\u00e9mon';
+  const fetchBtnHtml = canFetch
+    ? `<button class="btn btn-secondary btn-sm" onclick="fetchDrawerPrice()" id="drawerFetchBtn" ${card.tcgdexId ? '' : 'style="opacity:0.5;cursor:default"'} ${card.tcgdexId ? '' : 'disabled'} title="${card.tcgdexId ? 'Fetch from TCGdex' : 'Set TCGdex ID first'}">
+        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Fetch
+      </button>` : '';
+
+  // Variation select options
+  const variations = ['', 'Normal', 'Holo', 'Reverse Holo', 'Full Art', 'Alt Art', 'Promo', 'Special Illustration'];
+  const varOptions = variations.map(v => `<option value="${v}" ${card.variation === v ? 'selected' : ''}>${v || 'Any / Unknown'}</option>`).join('');
+
+  // Game select options
+  const games = ['Pok\u00e9mon', 'One Piece', 'Lorcana', 'MTG', 'Yu-Gi-Oh!', 'Digimon', 'Other'];
+  const gameOptions = games.map(g => `<option value="${escHtml(g)}" ${card.game === g ? 'selected' : ''}>${escHtml(g)}</option>`).join('');
+
+  const html = `
+    <!-- FIELDS SECTION -->
+    <div class="drawer-section">
+      <div class="drawer-section-title">Card Details</div>
+      <div class="drawer-fields">
+        <div class="form-group drawer-field-full">
+          <label>Card Name</label>
+          <input type="text" id="drawerName" value="${escHtml(card.name)}" />
+        </div>
+        <div class="form-group">
+          <label>Set / Set ID</label>
+          <input type="text" id="drawerSet" value="${escHtml(card.set || '')}" placeholder="sv01" />
+        </div>
+        <div class="form-group">
+          <label>Game</label>
+          <select id="drawerGame">${gameOptions}</select>
+        </div>
+        <div class="form-group">
+          <label>TCGdex Card ID</label>
+          <div style="display:flex;gap:var(--space-1)">
+            <input type="text" id="drawerTcgdexId" value="${escHtml(card.tcgdexId || '')}" placeholder="e.g. sv01-1" style="flex:1" />
+            ${fetchBtnHtml}
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Variation</label>
+          <select id="drawerVariation">${varOptions}</select>
+        </div>
+        <div class="form-group drawer-field-full">
+          <label>Notes</label>
+          <textarea id="drawerNotes" rows="2" placeholder="Source, reason…" style="resize:vertical">${escHtml(card.notes || '')}</textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:var(--space-2);padding-top:var(--space-1)">
+        <button class="btn btn-primary btn-sm" onclick="saveDrawerCard()">Save Changes</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDrawerCard()">Delete Card</button>
+      </div>
+    </div>
+
+    <!-- PRICE INTELLIGENCE -->
+    <div class="drawer-section">
+      <div class="drawer-section-title">Price Intelligence</div>
+      <div class="price-boxes">
+        <div class="price-box">
+          <div class="price-box-label">Market Price</div>
+          <div class="price-box-value">${marketPrice != null ? fmtPrice(marketPrice, cur) : '\u2014'}</div>
+          <div class="price-box-sub">Cardmarket avg30${card.livePriceFetchedAt ? ' · ' + fmtDateShort(card.livePriceFetchedAt) : ''}</div>
+        </div>
+        <div class="price-box">
+          <div class="price-box-label">Manual Price</div>
+          <div class="price-box-value">${manualPrice != null ? fmtPrice(manualPrice, manualCur) : '\u2014'}</div>
+          <div class="price-box-sub">${manualEntry ? fmtDate(manualEntry.date) : 'Not logged'}</div>
+        </div>
+      </div>
+      ${divHtml}
+      ${momentumHtml ? `<div class="momentum-row">${momentumHtml}</div>` : ''}
+    </div>
+
+    <!-- PRICE HISTORY CHART -->
+    <div class="drawer-section">
+      <div class="drawer-section-title">Price History</div>
+      <div class="price-chart-wrap">
+        <canvas id="drawerChartCanvas" height="180"></canvas>
+      </div>
+    </div>
+
+    <!-- MANUAL PRICE LOG -->
+    <div class="drawer-section">
+      <div class="drawer-section-title">Log Manual Price</div>
+      <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3)">
+        <input type="number" id="drawerPriceVal" placeholder="e.g. 45.00" step="0.01" min="0" style="flex:1" />
+        <select id="drawerPriceCur" style="width:76px">
+          <option value="CHF">CHF</option><option value="EUR">EUR</option>
+          <option value="USD">USD</option><option value="GBP">GBP</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="logDrawerPrice()">Log</button>
+      </div>
+      <div class="price-log-list">
+        ${priceLogListHtml}
+      </div>
+    </div>
+
+    <!-- MENTIONS SECTION -->
+    <div class="drawer-section">
+      <div class="drawer-section-title">Mentions</div>
+      <div style="display:flex;align-items:center;gap:var(--space-4)">
+        <div style="font-family:var(--font-display);font-size:2rem;font-weight:800;letter-spacing:-0.03em;color:var(--text);line-height:1">${Number(card.mentions)||0}</div>
+        <button class="btn btn-secondary btn-sm" onclick="bumpDrawerMention()">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          +1 Mention
+        </button>
+      </div>
+      <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:var(--space-2)">
+        First seen: ${fmtDate(card.firstSeen)} &nbsp;·&nbsp; Last seen: ${fmtDateShort(card.lastSeen || card.firstSeen)}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('drawerBody').innerHTML = html;
+}
+
+function closeDrawer() {
+  document.getElementById('cardDrawer').classList.remove('open');
+  state.drawerCardId = null;
+  if (state.drawerChart) {
+    state.drawerChart.destroy();
+    state.drawerChart = null;
+  }
+}
+
+function closeDrawerOnOverlay(event) {
+  if (event.target === document.getElementById('cardDrawer')) {
+    closeDrawer();
+  }
+}
+
+function saveDrawerCard() {
+  const id = state.drawerCardId;
+  if (!id) return;
+  const card = state.cards.find(c => c.id === id);
+  if (!card) return;
+
+  const prevTcgdexId = card.tcgdexId;
+  card.name      = document.getElementById('drawerName').value.trim() || card.name;
+  card.set       = document.getElementById('drawerSet').value.trim();
+  card.game      = document.getElementById('drawerGame').value;
+  card.tcgdexId  = document.getElementById('drawerTcgdexId').value.trim() || null;
+  card.variation = document.getElementById('drawerVariation').value || null;
+  card.notes     = document.getElementById('drawerNotes').value.trim();
+
+  // Update drawer header
+  document.getElementById('drawerCardName').textContent = card.name;
+  const sig = computeSignal(card);
+  document.getElementById('drawerBadges').innerHTML = signalBadge(sig) + ' ' + gameBadge(card.game || 'Other');
+
+  renderTracker();
+  syncToSheets();
+  showToast('Card updated', 'success');
+
+  // Auto-fetch if tcgdexId added
+  if (card.tcgdexId && card.tcgdexId !== prevTcgdexId) fetchDrawerPrice();
+}
+
+function deleteDrawerCard() {
+  const id = state.drawerCardId;
+  if (!id) return;
+  const card = state.cards.find(c => c.id === id);
+  if (!card) return;
+  confirmAction('Delete card?', `Remove "${card.name}" and all its history?`, () => {
+    state.cards = state.cards.filter(c => c.id !== id);
+    closeDrawer();
+    renderTracker();
+    updateTopbarKpis();
+    syncToSheets();
+    showToast('Card deleted', 'info');
+  });
+}
+
+function logDrawerPrice() {
+  const id = state.drawerCardId;
+  if (!id) return;
+  const card = state.cards.find(c => c.id === id);
+  if (!card) return;
+  const val = document.getElementById('drawerPriceVal').value;
+  const cur = document.getElementById('drawerPriceCur').value;
+  if (!val || isNaN(Number(val))) { showToast('Enter a valid price', 'error'); return; }
+  card.priceHistory = card.priceHistory || [];
+  card.priceHistory.push({ date: Date.now(), price: Number(val), currency: cur });
+  document.getElementById('drawerPriceVal').value = '';
+  showToast('Price logged', 'success');
+  _renderDrawerBody(card);
+  requestAnimationFrame(() => renderDrawerPriceChart(card));
+  renderTracker();
+  syncToSheets();
+}
+
+function deleteDrawerPriceEntry(cardId, index) {
+  const card = state.cards.find(c => c.id === cardId);
+  if (!card || !card.priceHistory) return;
+  card.priceHistory.splice(index, 1);
+  _renderDrawerBody(card);
+  requestAnimationFrame(() => renderDrawerPriceChart(card));
+  renderTracker();
+  syncToSheets();
+  showToast('Entry removed', 'info');
+}
+
+async function fetchDrawerPrice() {
+  const id = state.drawerCardId;
+  if (!id) return;
+  const card = state.cards.find(c => c.id === id);
+  if (!card) return;
+
+  // Update tcgdexId from drawer input if changed
+  const inputId = document.getElementById('drawerTcgdexId');
+  if (inputId && inputId.value.trim()) card.tcgdexId = inputId.value.trim();
+
+  if (!card.tcgdexId) {
+    showToast('Set a TCGdex ID first', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('drawerFetchBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Fetching…';
+  }
+
+  await fetchCardPrice(id);
+
+  // Refresh drawer body with updated card
+  const updated = state.cards.find(c => c.id === id);
+  if (updated) {
+    // Update header image if newly acquired
+    const imgSrc = updated.cardImageUrl || updated.imageUrl;
+    if (imgSrc) {
+      const imgWrap = document.getElementById('drawerImgWrap');
+      if (imgWrap) {
+        imgWrap.innerHTML = `<img class="drawer-img" src="${escHtml(imgSrc)}" alt="${escHtml(updated.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="drawer-img-placeholder" style="display:none"><svg viewBox='0 0 24 24' width='28' height='28' stroke='currentColor' fill='none' stroke-width='1.5'><rect x='2' y='2' width='20' height='20' rx='3'/></svg></div>`;
+      }
+    }
+    document.getElementById('drawerCardName').textContent = updated.name;
+    const sig = computeSignal(updated);
+    document.getElementById('drawerBadges').innerHTML = signalBadge(sig) + ' ' + gameBadge(updated.game || 'Other');
+    _renderDrawerBody(updated);
+    requestAnimationFrame(() => renderDrawerPriceChart(updated));
+  }
+}
+
+function bumpDrawerMention() {
+  const id = state.drawerCardId;
+  if (!id) return;
+  const card = state.cards.find(c => c.id === id);
+  if (!card) return;
+  card.mentions = (Number(card.mentions)||0) + 1;
+  card.lastSeen = Date.now();
+  _renderDrawerBody(card);
+  // Update header badges (signal may have changed)
+  const sig = computeSignal(card);
+  document.getElementById('drawerBadges').innerHTML = signalBadge(sig) + ' ' + gameBadge(card.game || 'Other');
+  renderTracker();
+  updateTopbarKpis();
+  syncToSheets();
+  showToast(`+1 mention \u2014 "${card.name}" now has ${card.mentions}`, 'success');
+}
+
+function renderDrawerPriceChart(card) {
+  const canvas = document.getElementById('drawerChartCanvas');
+  if (!canvas) return;
+
+  // Destroy existing chart
+  if (state.drawerChart) {
+    state.drawerChart.destroy();
+    state.drawerChart = null;
+  }
+
+  const history = sanitizePriceHistory(card.priceHistory).filter(p => p.price != null);
+  if (history.length === 0) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+
+  const sorted = [...history].sort((a, b) => a.date - b.date);
+  const marketEntries = sorted.filter(p => p.source === 'tcgdex');
+  const manualEntries = sorted.filter(p => p.source !== 'tcgdex');
+
+  const allDates = sorted.map(p => fmtDate(p.date));
+  const uniqueDates = [...new Set(allDates)];
+
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
+  const textColor = isDark ? '#8b88a0' : '#6b6880';
+
+  const buildDataset = (entries, label, color) => {
+    const map = {};
+    entries.forEach(p => { map[fmtDate(p.date)] = Number(p.price); });
+    return {
+      label,
+      data: uniqueDates.map(d => map[d] ?? null),
+      borderColor: color,
+      backgroundColor: color.replace(')', ',0.08)').replace('rgb', 'rgba'),
+      borderWidth: 2,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      tension: 0.3,
+      spanGaps: true,
+      fill: false,
+    };
+  };
+
+  const datasets = [];
+  if (marketEntries.length > 0) datasets.push(buildDataset(marketEntries, 'Market', 'rgb(46,196,182)'));
+  if (manualEntries.length > 0) datasets.push(buildDataset(manualEntries, 'Manual', 'rgb(124,107,255)'));
+
+  if (datasets.length === 0) return;
+
+  state.drawerChart = new Chart(canvas, {
+    type: 'line',
+    data: { labels: uniqueDates, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: {
+          display: datasets.length > 1,
+          position: 'top',
+          labels: { color: textColor, font: { size: 11, family: "'Satoshi', sans-serif" }, padding: 10, boxWidth: 10 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const entry = history[ctx.dataIndex];
+              const c = entry ? entry.currency : (card.livePriceCurrency || 'EUR');
+              return `${ctx.dataset.label}: ${fmtPrice(ctx.parsed.y, c)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: textColor, font: { size: 10 }, maxRotation: 30, maxTicksLimit: 8 },
+          grid: { display: false }
+        },
+        y: {
+          ticks: { color: textColor, font: { size: 10 }, callback: v => v.toFixed(2) },
+          grid: { color: gridColor }
+        }
+      }
+    }
+  });
+}
+
+// Escape key closes drawer
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('cardDrawer').classList.contains('open')) {
+    closeDrawer();
+  }
+});
+
+// =========================================
+//   INIT
+// =========================================
+function init() {
+  // Restore saved Sheets URL and auto-sync (GitHub Pages version)
+  try {
+    const savedUrl = localStorage.getItem('holoTrackerSheetsUrl');
+    if (savedUrl) {
+      state.sheetsUrl = savedUrl;
+      const input = document.getElementById('sheetsUrlInput');
+      if (input) input.value = savedUrl;
+      updateSheetsStatus(true);
+      syncData();
+    }
+  } catch(e) {}
+  renderTracker();
+  renderSealed();
+  renderCollection();
+  updateTopbarKpis();
+  updateCollectionKpis();
+}
+
+init();
+</script>
+</body>
+</html>
