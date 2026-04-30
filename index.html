@@ -7586,7 +7586,7 @@ function renderDigest(){
   });
   const avg=priceChanges.length?priceChanges.reduce((a,b)=>a+b,0)/priceChanges.length:null;
   const updatedAt=now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('digest-content').innerHTML=`
+  const _dc=document.getElementById('digest-content'); if(_dc) _dc.innerHTML=`
     <div class="digest-row"><span class="digest-label">Cards mentioned this week</span><span class="digest-val">${mentionedThisWeek}</span></div>
     <div class="digest-row"><span class="digest-label">New cards added</span><span class="digest-val">${newThisWeek}</span></div>
     <div class="digest-row"><span class="digest-label">Total mention logs</span><span class="digest-val">${mentionsThisWeek}</span></div>
@@ -7597,14 +7597,19 @@ function renderDigest(){
 }
 
 function renderDashStats(){
-  document.getElementById('d-total').textContent=fmtCHF(cards.reduce((s,c)=>s+lastP(c),0));
+  // Safe helpers — fallback to _upgraded dashboard element IDs
+  function _setDash(id, val){
+    var el = document.getElementById(id);
+    if(el) el.textContent=val;
+  }
+  _setDash('d-total',    fmtCHF(cards.reduce((s,c)=>s+lastP(c),0)));
   const dst=document.getElementById('d-sealed-total');if(dst)dst.textContent=fmtCHF(sealed.reduce((s,x)=>s+(parseFloat(x.lastPrice)||0),0));
   const dsc=document.getElementById('d-sealed-count');if(dsc)dsc.textContent=sealed.length+' products';
   const hotC=cards.filter(c=>signal(c)==='hot'||signal(c)==='buydip').length;
   const hotS=sealed.filter(s=>sealedSignal(s)==='hot').length;
-  document.getElementById('d-hot').textContent=hotC+hotS;
+  _setDash('d-hot',      hotC+hotS);
   const totM=cards.reduce((s,c)=>s+c.mentions,0)+sealed.reduce((s,x)=>s+x.mentions,0);
-  document.getElementById('d-mentions').textContent=totM;
+  _setDash('d-mentions', totM);
   const wkStr=new Date(Date.now()-7*864e5).toISOString().split('T')[0];
   const wkM=cards.reduce((s,c)=>s+c.priceHistory.filter(p=>String(p.date)>=wkStr).length,0);
   const dmw=document.getElementById('d-mentions-week');if(dmw)dmw.textContent='+'+wkM+' this week';
@@ -7638,7 +7643,7 @@ function renderLeaderboard(){
   const ranked=[...cards].sort((a,b)=>calcScore(b)-calcScore(a)).slice(0,8);
   const maxScore=calcScore(ranked[0])||1;
   const rc=['gold','silver','bronze'];
-  document.getElementById('leaderboard-list').innerHTML=ranked.map((c,i)=>`
+  const _ll=document.getElementById('leaderboard-list'); if(_ll) _ll.innerHTML=ranked.map((c,i)=>`
     <div class="lb-row">
       <div class="lb-rank ${rc[i]||''}">${i+1}</div>
       <div class="lb-name">${esc(c.name)}<br><span style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-dim);font-weight:400;">${badgeHtml(signal(c))}</span></div>
@@ -7674,7 +7679,8 @@ function renderHeatmap(){
     if(d in dayMap) dayMap[d]++;
   }));
   const max=Math.max(...Object.values(dayMap),1);
-  document.getElementById('heatmap').innerHTML=Object.entries(dayMap).map(([date,count])=>{
+  const _hm=document.getElementById('heatmap')||document.getElementById('heatmapContainer'); if(!_hm) return;
+  _hm.innerHTML=Object.entries(dayMap).map(([date,count])=>{
     const lvl=count===0?'':count<=max*0.25?'l1':count<=max*0.5?'l2':count<=max*0.75?'l3':'l4';
     return `<div class="hm-day ${lvl}" title="${date}: ${count} mention${count!==1?'s':''}"></div>`;
   }).join('');
@@ -7709,7 +7715,8 @@ function renderROI(){
     const first=c.priceHistory[0].price, last=lastP(c);
     return{c,first,last,roi:((last-first)/first)*100};
   }).sort((a,b)=>b.roi-a.roi).slice(0,8);
-  document.getElementById('roi-list').innerHTML=rows.length
+  const _rl=document.getElementById('roi-list'); if(!_rl) return;
+  _rl.innerHTML=rows.length
     ?rows.map(({c,first,last,roi})=>`
       <div class="lb-row">
         <div style="flex:1"><div style="font-weight:600;font-size:12px;color:var(--text)">${esc(c.name)}</div>
@@ -7726,7 +7733,8 @@ function renderTargetTimeline(){
     c.priceHistory.forEach(p=>{if(p.price<=c.target) hits.push({name:c.name,date:p.date,price:p.price,target:c.target});});
   });
   hits.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-  document.getElementById('target-timeline').innerHTML=hits.length
+  const _tt=document.getElementById('target-timeline'); if(!_tt) return;
+  _tt.innerHTML=hits.length
     ?hits.slice(0,10).map(h=>`
       <div class="tl-item">
         <div class="tl-dot"></div>
@@ -8176,7 +8184,12 @@ function openModal_final(card) {
     'coll-stat-pnl':    'collKpiPnl',
     // Sealed stats
     's-stat-count': 'sealedCount',
-    // Dashboard
+    // Dashboard stats (_final uses d-total/d-hot/d-mentions, _upgraded uses dashCards/dashHot/dashMentions)
+    'd-total':        'dashCards',
+    'd-hot':          'dashHot',
+    'd-mentions':     'dashMentions',
+    'd-coll-count':   'dashCollection',
+    // Dashboard tab detection
     'tab-dashboard': 'page-dashboard',
   };
   var _origGetElementById = document.getElementById.bind(document);
