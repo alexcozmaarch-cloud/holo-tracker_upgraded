@@ -5965,9 +5965,12 @@ function setFilter(f,btn){
 }
 
 function getFiltered(){
-  const q   = document.getElementById('in-search').value.toLowerCase();
-  const sort= document.getElementById('in-sort').value;
-  const gf  = document.getElementById('in-game-filter').value;
+  const _srchEl = document.getElementById('in-search');
+  const _sortEl = document.getElementById('in-sort');
+  const _gfEl   = document.getElementById('in-game-filter');
+  const q   = _srchEl ? _srchEl.value.toLowerCase() : '';
+  const sort= _sortEl ? _sortEl.value : 'recent';
+  const gf  = _gfEl   ? _gfEl.value   : 'all';
   let f = cards.filter(c=>
     (filter==='all'||signal(c)===filter||(filter==='buyzone'&&buyZone(c).score>0)||(filter==='strongbuy'&&buyZone(c).score>=3)) &&
     (gf==='all'||c.game===gf) &&
@@ -6597,8 +6600,10 @@ function collCondLabel(item){
 }
 
 function renderCollection(){
-  const q    = document.getElementById('coll-search').value.toLowerCase();
-  const sort = document.getElementById('coll-sort').value;
+  const _csEl = document.getElementById('coll-search');
+  const _ctEl = document.getElementById('coll-sort');
+  const q    = _csEl ? _csEl.value.toLowerCase() : '';
+  const sort = _ctEl ? _ctEl.value : 'recent';
 
   // Filter first
   let filtered = collection.filter(item=>
@@ -8261,8 +8266,10 @@ function setSealedFilter(f,btn){
 }
 
 function renderSealed(){
-  const q    = document.getElementById('s-search').value.toLowerCase();
-  const sort = document.getElementById('s-sort').value;
+  const _ssEl = document.getElementById('s-search');
+  const _stEl = document.getElementById('s-sort');
+  const q    = _ssEl ? _ssEl.value.toLowerCase() : '';
+  const sort = _stEl ? _stEl.value : 'recent';
   let allSealedRows = sealed.filter(s=>
     (sealFilter==='all'||sealedSignal(s)===sealFilter||(sealFilter==='buyzone'&&s.mentions>=2)) &&
     (String(s.name||'').toLowerCase().includes(q)||String(s.notes||'').toLowerCase().includes(q))
