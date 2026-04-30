@@ -7629,6 +7629,7 @@ function renderDashStats(){
 }
 
 function calcScore(c){
+  if(!c||!c.priceHistory) return 0;
   const p=c.priceHistory.map(x=>x.price);
   const growth=p.length>1?(p[p.length-1]-p[0])/p[0]:0;
   const sig=signal(c);
@@ -7640,7 +7641,8 @@ function calcScore(c){
 }
 
 function renderLeaderboard(){
-  const ranked=[...cards].sort((a,b)=>calcScore(b)-calcScore(a)).slice(0,8);
+  const ranked=[...cards].filter(c=>c&&c.priceHistory).sort((a,b)=>calcScore(b)-calcScore(a)).slice(0,8);
+  if(!ranked.length) return;
   const maxScore=calcScore(ranked[0])||1;
   const rc=['gold','silver','bronze'];
   const _ll=document.getElementById('leaderboard-list'); if(_ll) _ll.innerHTML=ranked.map((c,i)=>`
