@@ -4949,11 +4949,20 @@ function applyCMPrices(priceRows){
   cards.forEach(c=>{ if(_cmPrices[c.id]?.price>0) c.cmLive=_cmPrices[c.id]; });
   try{ sealed     = JSON.parse(localStorage.getItem(KEY_SCACHE) || '[]'); }catch{}
   try{ collection = JSON.parse(localStorage.getItem(KEY_COLL)    || '[]'); }catch{}
-  render(); if(typeof renderSealed==='function') renderSealed();
+  // defer render until after DOMContentLoaded (aliasMap + getElementById patch must be in place first)
+  if(document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      render(); if(typeof renderSealed==='function') renderSealed();
+    });
+  } else {
+    render(); if(typeof renderSealed==='function') renderSealed();
+  }
 
   if(scriptUrl){
-    document.getElementById('url-input').value = scriptUrl;
-    document.getElementById('setup-banner').style.display = 'none';
+    const urlInput = document.getElementById('url-input') || document.getElementById('sheetsUrlInput');
+    if(urlInput) urlInput.value = scriptUrl;
+    const banner = document.getElementById('setup-banner') || document.getElementById('setupBanner');
+    if(banner) banner.style.display = 'none';
     loadSheet().then(()=>{ scheduleCMBgFetch(); loadSnapshotStatus(); }); // fetch after data loaded
   } else {
     scheduleCMBgFetch();
@@ -5005,7 +5014,7 @@ async function connectFromPanel(){
   // Save to localStorage immediately
   scriptUrl = url;
   localStorage.setItem(KEY_URL, url);
-  document.getElementById('url-input').value = url;
+  var _uiEl = document.getElementById('url-input') || document.getElementById('sheetsUrlInput'); if(_uiEl) _uiEl.value = url;
   document.getElementById('url-panel').style.display = 'none';
   // Now sync
   await loadSheet();
@@ -5026,7 +5035,7 @@ function copyPhoneLink(){
 }
 
 async function connectSheet(){
-  const url = document.getElementById('url-input').value.trim();
+  const _urlEl = document.getElementById('url-input') || document.getElementById('sheetsUrlInput'); const url = _urlEl ? _urlEl.value.trim() : '';
   const msg = document.getElementById('connect-msg');
   const btn = document.getElementById('btn-connect');
 
@@ -5057,7 +5066,7 @@ async function connectSheet(){
     localStorage.setItem(KEY_COLL,   JSON.stringify(collection));
   // Clear collection market cache so prices re-fetch with new data
   Object.keys(_collMktCache).forEach(k=>delete _collMktCache[k]);
-    document.getElementById('setup-banner').style.display = 'none';
+    const _banner = document.getElementById('setup-banner'); if(_banner) _banner.style.display = 'none';
     if(typeof renderSealed==='function') renderSealed();
     setSyncing('synced', 'Connected · '+new Date().toLocaleTimeString());
     render();
@@ -8856,22 +8865,14 @@ Cards with cmLive set right now: ${withLive}/${cards.length}`;
         }
       } else if(data.price > 0){
         _updateDiagRow('t5','ok',
-          'CM direct scrape works!
-'+
-          'Card: '+esc(cmTestCard.name)+'
-'+
-          'CM Avg Sell: €'+data.price.toFixed(2)+
+          'CM direct scrape works!\nCard: '+esc(cmTestCard.name)+'\nCM Avg Sell: €'+data.price.toFixed(2)+
           (data.trend ? ' | Trend: €'+data.trend.toFixed(2) : '')+
           (data.avg7  ? ' | 7d: €'+data.avg7.toFixed(2) : '')+
-          (data.low   ? ' | Low: €'+data.low.toFixed(2) : '')+'
-'+
-          'Source: '+data.source
+          (data.low   ? ' | Low: €'+data.low.toFixed(2) : '')+'\nSource: '+data.source
         );
       } else {
         _updateDiagRow('t5','warn',
-          'Script reached CM but could not parse a price.
-Card: '+esc(cmTestCard.name)+'
-URL: '+cmTestCard.cmUrl.slice(0,80),
+          'Script reached CM but could not parse a price.\nCard: '+esc(cmTestCard.name)+'\nURL: '+cmTestCard.cmUrl.slice(0,80),
           'The CM page layout may have changed. Check that the URL is the exact single-card listing page (not a search), then re-run.');
       }
     }catch(err){
