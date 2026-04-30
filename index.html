@@ -2392,9 +2392,11 @@ function respond(d) {
             <span class="form-card-title">Add Card Mention</span>
           </div>
           <div class="form-grid">
-            <div class="form-group span-2">
+            <div class="form-group span-2" style="position:relative">
               <label>Card Name</label>
-              <input type="text" id="cardName" placeholder="e.g. Charizard ex" />
+              <input type="text" id="cardName" placeholder="e.g. Charizard ex"
+                oninput="onNameInput()" onkeydown="onNameKey(event)" autocomplete="off" />
+              <div id="name-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:0 8px 32px rgba(0,0,0,0.4);max-height:260px;overflow-y:auto;"></div>
             </div>
             <div class="form-group">
               <label>Set / Set ID</label>
@@ -2876,87 +2878,130 @@ function respond(d) {
           </button>
         </div>
 
-        <!-- Dashboard KPIs -->
+        <!-- Dashboard KPIs (d-total/d-hot/d-mentions aliased here + dashCards/dashHot/dashMentions) -->
         <div class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
             <div class="kpi-label">Cards Tracked</div>
             <div class="kpi-value" id="dashCards">0</div>
-            <div class="kpi-delta" id="dashCardsDelta">All time</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
             <div class="kpi-label">Hot Signals</div>
             <div class="kpi-value" id="dashHot">0</div>
-            <div class="kpi-delta" id="dashHotDelta">cards + sealed</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
             <div class="kpi-label">Total Mentions</div>
             <div class="kpi-value" id="dashMentions">0</div>
-            <div class="kpi-delta">across all cards</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             <div class="kpi-label">Collection Items</div>
             <div class="kpi-value" id="dashCollection">0</div>
-            <div class="kpi-delta" id="dashCollDelta">in collection</div>
           </div>
         </div>
 
-        <!-- Charts -->
-        <div class="chart-grid">
+        <!-- Weekly Digest -->
+        <div class="chart-card" style="margin-bottom:16px">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Weekly Digest</div>
+            <span class="tag tag-accent">Last 7 days</span>
+          </div>
+          <div id="digest-content" style="font-family:var(--font-mono);font-size:11px;"></div>
+        </div>
+
+        <!-- Signal chart + Portfolio trend -->
+        <div class="charts-row" style="margin-bottom:16px">
+          <div class="chart-box">
+            <div class="chart-label">Signal Distribution</div>
+            <div class="chart-canvas-wrap"><canvas id="dash-signal-chart" class="chart-canvas"></canvas></div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-label">Portfolio Trend</div>
+            <div class="chart-canvas-wrap"><canvas id="portfolio-trend-chart" class="chart-canvas"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Price trend chart -->
+        <div class="chart-card" style="margin-bottom:16px">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Price History — Top 5 Cards</div>
+            <span class="tag tag-accent">Live</span>
+          </div>
+          <div style="height:160px;position:relative;"><canvas id="dash-price-chart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas></div>
+        </div>
+
+        <!-- Most mentioned this week + Buy zone alerts -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
           <div class="chart-card">
             <div class="chart-card-header">
-              <div class="chart-card-title">Signal Distribution</div>
-              <span class="tag tag-accent">Cards</span>
+              <div class="chart-card-title">Hot This Week</div>
+              <span class="tag tag-accent">7 days</span>
             </div>
-            <canvas id="signalChart" height="200"></canvas>
+            <div id="most-mentioned-week"></div>
           </div>
           <div class="chart-card">
             <div class="chart-card-header">
-              <div class="chart-card-title">Games Breakdown</div>
-              <span class="tag tag-accent">All</span>
+              <div class="chart-card-title">Buy Zone Alerts</div>
+              <span class="tag" style="background:rgba(57,217,138,0.12);color:var(--green);">Live</span>
             </div>
-            <canvas id="gamesChart" height="200"></canvas>
+            <div id="buyzoneAlerts"></div>
           </div>
         </div>
 
-        <!-- Top Mentioned Cards -->
-        <div class="table-wrap">
-          <div style="padding:var(--space-4) var(--space-5);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-            <div style="font-family:var(--font-display);font-weight:700;font-size:var(--text-base)">Top Mentioned Cards</div>
-            <span class="tag tag-accent">Leaderboard</span>
+        <!-- Leaderboard -->
+        <div class="chart-card" style="margin-bottom:16px">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Card Leaderboard</div>
+            <span class="tag tag-accent">Top 8</span>
           </div>
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:36px">#</th>
-                  <th>Card</th>
-                  <th>Game</th>
-                  <th>Mentions</th>
-                  <th>Signal</th>
-                  <th>First Seen</th>
-                </tr>
-              </thead>
-              <tbody id="dashLeaderboard"></tbody>
-            </table>
-          </div>
-          <div id="dashLeaderboardEmpty" style="display:none">
-            <div class="empty-state" style="padding:var(--space-8)">
-              <div class="empty-desc">Add cards to see the leaderboard.</div>
+          <div id="leaderboard-list"></div>
+        </div>
+
+        <!-- Sealed leaderboard + Value -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">Sealed Leaderboard</div>
+              <span class="tag tag-accent">Top 8</span>
             </div>
+            <div id="sealed-leaderboard-list"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">Sealed Value</div>
+              <span class="tag tag-accent">By product</span>
+            </div>
+            <div id="sealed-value-list"></div>
           </div>
         </div>
 
-        <!-- Mention Heatmap -->
+        <!-- ROI + Target timeline -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">ROI Tracker</div>
+              <span class="tag tag-accent">Price logged</span>
+            </div>
+            <div id="roi-list"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">Target Hit Timeline</div>
+              <span class="tag" style="background:rgba(245,200,66,0.12);color:var(--gold);">Targets</span>
+            </div>
+            <div id="target-timeline"></div>
+          </div>
+        </div>
+
+        <!-- Heatmap -->
         <div class="chart-card">
           <div class="chart-card-header">
             <div class="chart-card-title">Activity Heatmap — Last 12 Weeks</div>
           </div>
-          <div id="heatmapContainer"></div>
-          <div style="display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-3);font-size:var(--text-xs);color:var(--text-faint)">
+          <div id="heatmapContainer" style="display:flex;flex-wrap:wrap;gap:3px;padding:4px 0;"></div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:10px;color:var(--text-faint);">
             <span>Less</span>
             <div style="width:10px;height:10px;border-radius:2px;background:var(--surface-2)"></div>
             <div style="width:10px;height:10px;border-radius:2px;background:rgba(124,107,255,0.2)"></div>
@@ -8191,6 +8236,12 @@ function openModal_final(card) {
     'd-hot':          'dashHot',
     'd-mentions':     'dashMentions',
     'd-coll-count':   'dashCollection',
+    // Sets tab IDs
+    'sets-search':  'setsSearch',
+    'sets-tbody':   'setsBody',
+    'sets-empty':   'setsEmpty',
+    'sets-footer':  'setsFooter',
+    'sets-count':   'setsCount',
     // Dashboard tab detection
     'tab-dashboard': 'page-dashboard',
   };
@@ -8218,6 +8269,14 @@ document.addEventListener('DOMContentLoaded', function() {
       updateTopbarKpis();
     };
   }
+  // Fire KPI update after initial data load (cards array populated by _final's DOMContentLoaded)
+  setTimeout(function() {
+    if (typeof updateTopbarKpis === 'function') updateTopbarKpis();
+    // Also fire renderDashboard if dashboard is the active page
+    if (typeof renderDashboard === 'function' && typeof _currentPage !== 'undefined' && _currentPage === 'dashboard') {
+      renderDashboard();
+    }
+  }, 500);
   // Patch setSyncing
   if (typeof setSyncing === 'function') {
     const _orig = setSyncing;
