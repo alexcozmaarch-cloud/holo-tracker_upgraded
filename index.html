@@ -8079,16 +8079,11 @@ function openModal_final(card) {
 }
 
 
-// Init after DOM loaded
-document.addEventListener('DOMContentLoaded', function() {
-  initThemeToggle();
-
-  // ── DOM ID ALIASES: map _final element IDs to _upgraded element IDs ──────
-  // _final render() targets: #tbody, #empty, #show-more-btn
-  // _final getFiltered() targets: #in-search, #in-sort, #in-game-filter
-  // _final addCard() targets: #in-name, #in-set, #in-price, #in-currency, #in-game, #in-notes, #in-tcgdexid
-  // _final addSealed() targets: #s-name, #s-set, #s-price, #s-game, #s-type, #s-notes
-  const aliasMap = {
+// ── DOM ID ALIASES: must run at parse time (before _final's DOMContentLoaded) ──
+// Map _final element IDs → _upgraded HTML element IDs
+// This runs immediately when Script Block 3 is parsed (before any DOMContentLoaded fires)
+(function() {
+  var _aliasMap = {
     // Tracker table & state
     'tbody':          'trackerBody',
     'empty':          'trackerEmpty',
@@ -8119,7 +8114,7 @@ document.addEventListener('DOMContentLoaded', function() {
     's-tbody':        'sealedBody',
     's-empty':        'sealedEmpty',
     's-show-more-btn':'sealedFooter',
-    // Collection form  
+    // Collection form
     'coll-name':      'collName',
     'coll-set':       'collSet',
     'coll-game':      'collGame',
@@ -8136,67 +8131,56 @@ document.addEventListener('DOMContentLoaded', function() {
     'portfolio-avg':  'kpiPortfolioAvg',
     'portfolio-pinned':'kpiPinned',
     'portfolio-hot':  'kpiHotCount',
-    // Stat counters (hidden divs added to tracker page)
+    // Stat counters
     'stat-total':     'stat-total',
     'stat-hot':       'stat-hot',
     'stat-buydip':    'stat-buydip',
     'stat-mentions':  'stat-mentions',
-    // KPI topbar (kpiCards/kpiHot/kpiMentions mirror stat-total/stat-hot/stat-mentions)
-    'portfolio-bar':  'portfolio-bar',
-    'portfolio-avg':  'portfolio-avg',
-    'portfolio-pinned': 'portfolio-pinned',
-    'portfolio-mkt-val': 'portfolio-mkt-val',
-    'portfolio-pnl':  'portfolio-pnl',
+    // KPI topbar
+    'portfolio-bar':      'portfolio-bar',
+    'portfolio-mkt-val':  'portfolio-mkt-val',
+    'portfolio-pnl':      'portfolio-pnl',
     // Mobile card containers
     'mob-wrap':       'mob-wrap',
     's-mob-wrap':     's-mob-wrap',
     'coll-mob-wrap':  'coll-mob-wrap',
-    // Status elements in topbar
-    'price-status':   'price-status',
-    'snapshot-status-pill': 'snapshot-status-pill',
-    'buy-alert-btn':  'buy-alert-btn',
-    // Progress bar elements
-    'price-progress-wrap': 'price-progress-wrap',
-    'price-progress-bar':  'price-progress-bar',
+    // Status elements
+    'price-status':          'price-status',
+    'snapshot-status-pill':  'snapshot-status-pill',
+    'buy-alert-btn':         'buy-alert-btn',
+    // Progress bar
+    'price-progress-wrap':  'price-progress-wrap',
+    'price-progress-bar':   'price-progress-bar',
     'price-progress-label': 'price-progress-label',
-    'price-progress-pct':  'price-progress-pct',
+    'price-progress-pct':   'price-progress-pct',
     // Target hit bar
     'target-hit-bar': 'target-hit-bar',
     'target-hit-msg': 'target-hit-msg',
-    // Collection stats  
-    'coll-stat-count': 'collKpiItems',
-    'coll-stat-cost':  'collKpiCost',
+    // Collection stats
+    'coll-stat-count':  'collKpiItems',
+    'coll-stat-cost':   'collKpiCost',
     'coll-stat-graded': 'collKpiGraded',
-    'coll-stat-pnl':   'collKpiPnl',
+    'coll-stat-pnl':    'collKpiPnl',
     // Sealed stats
-    's-stat-count':   'sealedCount',
-    // Dashboard tab detection
-    'tab-dashboard':  'page-dashboard',
+    's-stat-count': 'sealedCount',
+    // Dashboard
+    'tab-dashboard': 'page-dashboard',
   };
-  Object.entries(aliasMap).forEach(([finalId, upgradedId]) => {
-    if (!document.getElementById(finalId)) {
-      const target = document.getElementById(upgradedId);
-      if (target) {
-        // Give the target element both IDs by patching getElementById to return it
-        target.setAttribute('data-alias', finalId);
-        // For non-input elements like tbody, just add a sibling alias element
-        if (target.tagName === 'TBODY' || target.tagName === 'DIV' || target.tagName === 'BUTTON') {
-          // Create a tiny proxy: override getElementById just for this ID
-          Object.defineProperty(document, '_alias_' + finalId, { value: target, writable: true });
-        }
-      }
-    }
-  });
-  // Override getElementById to handle aliases
-  const _origGetElementById = document.getElementById.bind(document);
+  var _origGetElementById = document.getElementById.bind(document);
   document.getElementById = function(id) {
-    const direct = _origGetElementById(id);
+    var direct = _origGetElementById(id);
     if (direct) return direct;
-    // Check alias map
-    const upgradedId = aliasMap[id];
+    var upgradedId = _aliasMap[id];
     if (upgradedId) return _origGetElementById(upgradedId);
     return null;
   };
+  // expose aliasMap for diagnostics
+  window._holoAliasMap = _aliasMap;
+})();
+
+// Init after DOM loaded
+document.addEventListener('DOMContentLoaded', function() {
+  initThemeToggle();
 
   // Patch render() to also update KPIs
   const _origRender = window.render;
